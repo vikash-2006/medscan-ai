@@ -12,11 +12,13 @@ echo "--------------------------------------------------------"
 cd "$(dirname "$0")"
 
 flet build apk \
-  --project "MedScan AI" \
-  --org "com.vikash.medscan" \
-  --product "MedScan AI Health Assistant" \
-  --description "AI Medical Diagnostic & OCR Assistant by Vikash Kumawat" \
+  --project medscan_ai \
+  --org com.vikash.medscan \
+  --product "MedScan AI" \
+  --description "AI Medical Diagnostic & Health Assistant by Vikash Kumawat" \
+  --yes \
+  -v \
   app/
 
 echo ""
-echo "Build complete! Check the output directory: build/apk/"
+echo "Build complete! Check the output directory: app/build/apk/"
