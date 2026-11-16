@@ -42,7 +42,7 @@ def build_history_screen(page: ft.Page, navigate_to) -> ft.Control:
                             ], expand=True),
                             ft.Container(
                                 content=ft.Text(urg, size=11, weight=ft.FontWeight.BOLD, color=badge_color),
-                                padding=ft.padding.symmetric(horizontal=8, vertical=4),
+                                padding=ft.Padding.symmetric(horizontal=8, vertical=4),
                                 border_radius=6,
                                 bgcolor=ft.Colors.GREY_100
                             )
@@ -66,7 +66,7 @@ def build_history_screen(page: ft.Page, navigate_to) -> ft.Control:
                     ft.Text(f"{rc.get('patient_name', 'Patient')} — {risk_lvl} ({rc.get('risk_probability', 0):.1f}%)", size=12, expand=True),
                     ft.Text(str(rc.get("created_at", ""))[:10], size=11, color=ft.Colors.GREY_500)
                 ], spacing=6),
-                padding=ft.padding.symmetric(vertical=4)
+                padding=ft.Padding.symmetric(vertical=4)
             )
         )
 

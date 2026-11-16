@@ -9,6 +9,8 @@ jobs:
   build-apk:
     name: Build Android APK Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout Repository
@@ -59,3 +61,22 @@ jobs:
             build/apk/*.apk
             **/build/apk/*.apk
           retention-days: 14
+
+      - name: Create or Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
+        with:
+          tag_name: v1.0.1
+          name: "MedScan AI Android APK v1.0.1"
+          body: |
+            ### MedScan AI Android Release APK
+            - **Native Android APK** built with Python & Flet
+            - Complete Deep Blue Native Android UI (Top Doctors, Doctor Chat, Report Scanner, Sanjeevani Risk ML)
+            - Fixed serious_python root import resolution & Flet 1.1 class compatibility
+            
+            **Direct Download**: Click `app-release.apk` below to download directly to your Android device without needing to sign into GitHub.
+          files: |
+            app/build/apk/*.apk
+            build/apk/*.apk
+            **/build/apk/*.apk
+        continue-on-error: true

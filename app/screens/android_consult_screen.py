@@ -1,21 +1,30 @@
+import os
 import flet as ft
 from app.state import state
 
-DOCTOR_FEMALE_IMG = "/Users/apple/MedScan AI/app/assets/doctor_female.jpg"
-DOCTOR_MALE_IMG = "/Users/apple/MedScan AI/app/assets/doctor_portrait.jpg"
+# Dynamic asset resolution for Desktop, Web, and Android APK
+_BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_ASSETS_DIR = os.path.join(_BASE_DIR, "assets")
+
+def _get_asset(filename: str) -> str:
+    path = os.path.join(_ASSETS_DIR, filename)
+    return path if os.path.exists(path) else f"/{filename}"
+
+DOCTOR_FEMALE_IMG = _get_asset("doctor_female.jpg")
+DOCTOR_MALE_IMG = _get_asset("doctor_portrait.jpg")
 
 def build_android_consult_screen(page: ft.Page, navigate_to) -> ft.Control:
     # Top Status Bar
     status_bar = ft.Container(
         content=ft.Row([
-            ft.Text("9:41", size=13, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK87),
+            ft.Text("9:41", size=13, weight=ft.FontWeight.BOLD, color=ft.Colors.BLACK_87),
             ft.Row([
-                ft.Icon(ft.Icons.SIGNAL_CELLULAR_ALT_ROUNDED, size=15, color=ft.Colors.BLACK87),
-                ft.Icon(ft.Icons.WIFI_ROUNDED, size=15, color=ft.Colors.BLACK87),
-                ft.Icon(ft.Icons.BATTERY_FULL_ROUNDED, size=16, color=ft.Colors.BLACK87),
+                ft.Icon(ft.Icons.SIGNAL_CELLULAR_ALT_ROUNDED, size=15, color=ft.Colors.BLACK_87),
+                ft.Icon(ft.Icons.WIFI_ROUNDED, size=15, color=ft.Colors.BLACK_87),
+                ft.Icon(ft.Icons.BATTERY_FULL_ROUNDED, size=16, color=ft.Colors.BLACK_87),
             ], spacing=6)
         ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-        padding=ft.padding.symmetric(horizontal=16, vertical=4)
+        padding=ft.Padding.symmetric(horizontal=16, vertical=4)
     )
 
     # Screen Title Header
@@ -30,11 +39,11 @@ def build_android_consult_screen(page: ft.Page, navigate_to) -> ft.Control:
                     ft.Icon(ft.Icons.ASSIGNMENT_TURNED_IN_ROUNDED, size=28, color=ft.Colors.BLUE_600),
                     ft.Icon(ft.Icons.ADD_CIRCLE_ROUNDED, size=22, color=ft.Colors.PINK_400),
                 ], alignment=ft.MainAxisAlignment.CENTER, spacing=-6),
-                alignment=ft.alignment.center
+                alignment=ft.Alignment.CENTER
             )
         ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=0),
-        padding=ft.padding.symmetric(vertical=10),
-        alignment=ft.alignment.center
+        padding=ft.Padding.symmetric(vertical=10),
+        alignment=ft.Alignment.CENTER
     )
 
     # Chat Messages Stream Container
@@ -48,10 +57,10 @@ def build_android_consult_screen(page: ft.Page, navigate_to) -> ft.Control:
                 size=12,
                 color=ft.Colors.BLUE_GREY_900
             ),
-            padding=ft.padding.symmetric(horizontal=14, vertical=10),
-            border_radius=ft.border_radius.only(top_left=4, top_right=16, bottom_left=16, bottom_right=16),
+            padding=ft.Padding.symmetric(horizontal=14, vertical=10),
+            border_radius=ft.BorderRadius.only(top_left=4, top_right=16, bottom_left=16, bottom_right=16),
             bgcolor=ft.Colors.WHITE,
-            border=ft.border.all(1, ft.Colors.GREY_200),
+            border=ft.Border.all(1, ft.Colors.GREY_200),
             width=250
         )
     ], alignment=ft.MainAxisAlignment.START)
@@ -63,8 +72,8 @@ def build_android_consult_screen(page: ft.Page, navigate_to) -> ft.Control:
                 size=12,
                 color=ft.Colors.BLUE_900
             ),
-            padding=ft.padding.symmetric(horizontal=14, vertical=10),
-            border_radius=ft.border_radius.only(top_left=16, top_right=4, bottom_left=16, bottom_right=16),
+            padding=ft.Padding.symmetric(horizontal=14, vertical=10),
+            border_radius=ft.BorderRadius.only(top_left=16, top_right=4, bottom_left=16, bottom_right=16),
             bgcolor="#BFDBFE",  # Soft pastel blue
             width=250
         )
@@ -90,8 +99,8 @@ def build_android_consult_screen(page: ft.Page, navigate_to) -> ft.Control:
             ft.Row([
                 ft.Container(
                     content=ft.Text(txt, size=12, color=ft.Colors.BLUE_900),
-                    padding=ft.padding.symmetric(horizontal=14, vertical=10),
-                    border_radius=ft.border_radius.only(top_left=16, top_right=4, bottom_left=16, bottom_right=16),
+                    padding=ft.Padding.symmetric(horizontal=14, vertical=10),
+                    border_radius=ft.BorderRadius.only(top_left=16, top_right=4, bottom_left=16, bottom_right=16),
                     bgcolor="#BFDBFE",
                     width=250
                 )
@@ -106,10 +115,10 @@ def build_android_consult_screen(page: ft.Page, navigate_to) -> ft.Control:
             ft.Row([
                 ft.Container(
                     content=ft.Text(reply, size=12, color=ft.Colors.BLUE_GREY_900),
-                    padding=ft.padding.symmetric(horizontal=14, vertical=10),
-                    border_radius=ft.border_radius.only(top_left=4, top_right=16, bottom_left=16, bottom_right=16),
+                    padding=ft.Padding.symmetric(horizontal=14, vertical=10),
+                    border_radius=ft.BorderRadius.only(top_left=4, top_right=16, bottom_left=16, bottom_right=16),
                     bgcolor=ft.Colors.WHITE,
-                    border=ft.border.all(1, ft.Colors.GREY_200),
+                    border=ft.Border.all(1, ft.Colors.GREY_200),
                     width=250
                 )
             ], alignment=ft.MainAxisAlignment.START)
@@ -127,7 +136,7 @@ def build_android_consult_screen(page: ft.Page, navigate_to) -> ft.Control:
                             src=DOCTOR_FEMALE_IMG,
                             width=38,
                             height=38,
-                            fit=ft.ImageFit.COVER,
+                            fit=ft.BoxFit.COVER,
                             border_radius=19
                         ),
                         width=38,
@@ -171,18 +180,18 @@ def build_android_consult_screen(page: ft.Page, navigate_to) -> ft.Control:
                         on_click=send_message
                     )
                 ], spacing=0),
-                padding=ft.padding.symmetric(horizontal=8, vertical=2),
+                padding=ft.Padding.symmetric(horizontal=8, vertical=2),
                 border_radius=16,
-                border=ft.border.all(1, ft.Colors.GREY_300),
+                border=ft.Border.all(1, ft.Colors.GREY_300),
                 bgcolor=ft.Colors.WHITE
             )
         ], spacing=6),
         padding=16,
         border_radius=24,
         bgcolor=ft.Colors.WHITE,
-        border=ft.border.all(1, ft.Colors.BLUE_50),
+        border=ft.Border.all(1, ft.Colors.BLUE_50),
         shadow=ft.BoxShadow(spread_radius=1, blur_radius=16, color=ft.Colors.BLUE_100),
-        margin=ft.padding.symmetric(horizontal=16, vertical=6)
+        margin=ft.Padding.symmetric(horizontal=16, vertical=6)
     )
 
     # Bottom Swipe/Stethoscope action pill matching the left phone mock
@@ -194,12 +203,12 @@ def build_android_consult_screen(page: ft.Page, navigate_to) -> ft.Control:
                 height=50,
                 border_radius=25,
                 bgcolor=ft.Colors.BLUE_800,
-                alignment=ft.alignment.center
+                alignment=ft.Alignment.CENTER
             ),
             ft.Icon(ft.Icons.KEYBOARD_DOUBLE_ARROW_DOWN_ROUNDED, size=18, color=ft.Colors.BLUE_800),
         ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=4),
-        alignment=ft.alignment.center,
-        padding=ft.padding.only(top=10)
+        alignment=ft.Alignment.CENTER,
+        padding=ft.Padding.only(top=10)
     )
 
     return ft.ListView(

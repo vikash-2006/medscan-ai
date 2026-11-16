@@ -123,19 +123,19 @@ def build_scan_screen(page: ft.Page, navigate_to) -> ft.Control:
     )
 
     preset_chips = ft.Row([
-        ft.ActionChip(
+        ft.Chip(
             label=ft.Text("Sample 1: High Risk", size=11),
-            avatar=ft.Icon(ft.Icons.WARNING_AMBER_ROUNDED, size=16, color=ft.Colors.RED_600),
+            leading=ft.Icon(ft.Icons.WARNING_AMBER_ROUNDED, size=16, color=ft.Colors.RED_600),
             on_click=lambda e: load_preset(e, "Diabetes & Lipid (High Risk)")
         ),
-        ft.ActionChip(
+        ft.Chip(
             label=ft.Text("Sample 2: Normal", size=11),
-            avatar=ft.Icon(ft.Icons.CHECK_CIRCLE_OUTLINE_ROUNDED, size=16, color=ft.Colors.GREEN_600),
+            leading=ft.Icon(ft.Icons.CHECK_CIRCLE_OUTLINE_ROUNDED, size=16, color=ft.Colors.GREEN_600),
             on_click=lambda e: load_preset(e, "Normal CBC & Vitals (Healthy)")
         ),
-        ft.ActionChip(
+        ft.Chip(
             label=ft.Text("Sample 3: Anemia", size=11),
-            avatar=ft.Icon(ft.Icons.INFO_OUTLINE_ROUNDED, size=16, color=ft.Colors.AMBER_600),
+            leading=ft.Icon(ft.Icons.INFO_OUTLINE_ROUNDED, size=16, color=ft.Colors.AMBER_600),
             on_click=lambda e: load_preset(e, "Low Hemoglobin (Anemia Profile)")
         ),
     ], scroll=ft.ScrollMode.ADAPTIVE, spacing=8)
@@ -156,7 +156,7 @@ def build_scan_screen(page: ft.Page, navigate_to) -> ft.Control:
             report_text_field,
             ft.Container(height=10),
             analyze_btn,
-            ft.Container(content=status_label, alignment=ft.alignment.center)
+            ft.Container(content=status_label, alignment=ft.Alignment.CENTER)
         ],
         spacing=8,
         padding=16

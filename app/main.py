@@ -1,4 +1,82 @@
+import sys
+import os
+import types
+
+# ---------------------------------------------------------------------------
+# Android Packaging & Module Resolution Setup
+# ---------------------------------------------------------------------------
+# When serious_python runs main.py inside the Android APK root directory
+# (e.g. /tmp/serious_python_temp.../main.py), 'app' does not exist as a subfolder.
+# We ensure the script directory is in sys.path and register an 'app' module
+# alias in sys.modules so all 'from app... import ...' imports succeed.
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
+
+if "app" not in sys.modules:
+    app_mod = types.ModuleType("app")
+    app_mod.__path__ = [current_dir]
+    app_mod.__file__ = os.path.join(current_dir, "__init__.py")
+    sys.modules["app"] = app_mod
+
 import flet as ft
+
+# ---------------------------------------------------------------------------
+# Flet 1.1+ Compatibility Shims
+# ---------------------------------------------------------------------------
+# 1. Colors enum aliases (BLACK87 -> BLACK_87, WHITE70 -> WHITE_70, etc.)
+if hasattr(ft, "Colors"):
+    for _name in list(dir(ft.Colors)):
+        if "_" in _name:
+            _alias = _name.replace("_", "")
+            try:
+                setattr(ft.Colors, _alias, getattr(ft.Colors, _name))
+            except Exception:
+                pass
+    ft.colors = ft.Colors
+
+# 2. Controls & Properties
+if hasattr(ft, "Padding"):
+    ft.padding = ft.Padding
+if hasattr(ft, "BorderRadius"):
+    ft.border_radius = ft.BorderRadius
+if hasattr(ft, "Margin"):
+    ft.margin = ft.Margin
+if hasattr(ft, "Border"):
+    ft.border = ft.Border
+if hasattr(ft, "BoxFit"):
+    ft.ImageFit = ft.BoxFit
+if hasattr(ft, "Button") and not hasattr(ft, "ElevatedButton"):
+    ft.ElevatedButton = ft.Button
+
+# 3. Chip avatar -> leading compatibility wrapper
+if hasattr(ft, "Chip") and not hasattr(ft, "ActionChip"):
+    def _ActionChip(**kwargs):
+        if "avatar" in kwargs:
+            kwargs["leading"] = kwargs.pop("avatar")
+        return ft.Chip(**kwargs)
+    ft.ActionChip = _ActionChip
+
+# 4. Alignment lowercase properties
+if hasattr(ft, "Alignment"):
+    for _name in [
+        "CENTER", "TOP_LEFT", "TOP_RIGHT", "BOTTOM_LEFT", "BOTTOM_RIGHT",
+        "TOP_CENTER", "BOTTOM_CENTER", "CENTER_LEFT", "CENTER_RIGHT"
+    ]:
+        if hasattr(ft.Alignment, _name):
+            try:
+                setattr(ft.Alignment, _name.lower(), getattr(ft.Alignment, _name))
+            except Exception:
+                pass
+    ft.alignment = ft.Alignment
+
+# 5. App runner
+if not hasattr(ft, "app") and hasattr(ft, "run"):
+    ft.app = ft.run
+
+# ---------------------------------------------------------------------------
+# Application Imports
+# ---------------------------------------------------------------------------
 from app.state import state
 from app.screens.android_home_screen import build_android_home_screen
 from app.screens.android_consult_screen import build_android_consult_screen
@@ -34,7 +112,7 @@ def main(page: ft.Page):
                         ft.Icon(icon_data, color=ft.Colors.WHITE, size=18),
                         ft.Text(label, size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE)
                     ], spacing=5),
-                    padding=ft.padding.symmetric(horizontal=14, vertical=8),
+                    padding=ft.Padding.symmetric(horizontal=14, vertical=8),
                     border_radius=18,
                     bgcolor="#2563EB",  # Vibrant Royal Blue active pill
                     ink=True,
@@ -42,8 +120,8 @@ def main(page: ft.Page):
                 )
             else:
                 return ft.Container(
-                    content=ft.Icon(icon_data, color=ft.Colors.WHITE70, size=22),
-                    padding=ft.padding.symmetric(horizontal=12, vertical=8),
+                    content=ft.Icon(icon_data, color=ft.Colors.WHITE_70, size=22),
+                    padding=ft.Padding.symmetric(horizontal=12, vertical=8),
                     ink=True,
                     on_click=lambda _: navigate_to(idx)
                 )
@@ -56,11 +134,11 @@ def main(page: ft.Page):
                 create_nav_item(3, ft.Icons.HEALTH_AND_SAFETY_ROUNDED, "Risk ML"),
                 create_nav_item(4, ft.Icons.HISTORY_ROUNDED, "History"),
             ], alignment=ft.MainAxisAlignment.SPACE_AROUND),
-            padding=ft.padding.symmetric(horizontal=10, vertical=6),
+            padding=ft.Padding.symmetric(horizontal=10, vertical=6),
             border_radius=28,
             bgcolor="#1E3A8A",  # Deep Blue matching the reference UI
-            shadow=ft.BoxShadow(spread_radius=1, blur_radius=14, color=ft.Colors.BLACK26),
-            margin=ft.padding.symmetric(horizontal=16, vertical=8)
+            shadow=ft.BoxShadow(spread_radius=1, blur_radius=14, color=ft.Colors.BLACK_26),
+            margin=ft.Padding.symmetric(horizontal=16, vertical=8)
         )
 
     def navigate_to(index: int):
@@ -94,4 +172,8 @@ def main(page: ft.Page):
     )
 
 if __name__ == "__main__":
-    ft.run(main)
+    assets_path = os.path.join(current_dir, "assets")
+    if hasattr(ft, "run"):
+        ft.run(main, assets_dir=assets_path if os.path.exists(assets_path) else "assets")
+    elif hasattr(ft, "app"):
+        ft.app(main, assets_dir=assets_path if os.path.exists(assets_path) else "assets")

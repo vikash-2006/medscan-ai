@@ -16,15 +16,15 @@ def build_home_screen(page: ft.Page, navigate_to) -> ft.Control:
                 ft.Container(
                     content=ft.Row([
                         ft.Container(width=8, height=8, border_radius=4, bgcolor=status_color),
-                        ft.Text(status_text, size=11, color=ft.Colors.WHITE70, weight=ft.FontWeight.W_500),
+                        ft.Text(status_text, size=11, color=ft.Colors.WHITE_70, weight=ft.FontWeight.W_500),
                     ], spacing=4),
-                    padding=ft.padding.symmetric(horizontal=8, vertical=4),
+                    padding=ft.Padding.symmetric(horizontal=8, vertical=4),
                     border_radius=12,
-                    bgcolor=ft.Colors.WHITE12,
+                    bgcolor=ft.Colors.WHITE_12,
                 )
             ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-            ft.Text("Sanjeevani Pocket Health Diagnostic & OCR Assistant", size=13, color=ft.Colors.WHITE70),
-            ft.Divider(color=ft.Colors.WHITE24, height=15),
+            ft.Text("Sanjeevani Pocket Health Diagnostic & OCR Assistant", size=13, color=ft.Colors.WHITE_70),
+            ft.Divider(color=ft.Colors.WHITE_24, height=15),
             ft.Row([
                 ft.CircleAvatar(
                     content=ft.Icon(ft.Icons.PERSON, color=ft.Colors.TEAL_900),
@@ -33,18 +33,18 @@ def build_home_screen(page: ft.Page, navigate_to) -> ft.Control:
                 ),
                 ft.Column([
                     ft.Text("Welcome, Vikash Kumawat", size=15, weight=ft.FontWeight.W_600, color=ft.Colors.WHITE),
-                    ft.Text("BCA Data Science & AI Engineer", size=11, color=ft.Colors.WHITE70),
+                    ft.Text("BCA Data Science & AI Engineer", size=11, color=ft.Colors.WHITE_70),
                 ], spacing=1)
             ], spacing=10)
         ], spacing=8),
         padding=18,
         border_radius=16,
         gradient=ft.LinearGradient(
-            begin=ft.alignment.top_left,
-            end=ft.alignment.bottom_right,
+            begin=ft.Alignment.TOP_LEFT,
+            end=ft.Alignment.BOTTOM_RIGHT,
             colors=[ft.Colors.TEAL_800, ft.Colors.CYAN_900]
         ),
-        shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=ft.Colors.BLACK12)
+        shadow=ft.BoxShadow(spread_radius=1, blur_radius=10, color=ft.Colors.BLACK_12)
     )
 
     action_scan = ft.Card(
@@ -109,7 +109,7 @@ def build_home_screen(page: ft.Page, navigate_to) -> ft.Control:
             ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
             ft.Text("Open Scanner to process your first medical report.", size=12, color=ft.Colors.GREY_600)
         ]),
-        padding=ft.padding.only(top=10)
+        padding=ft.Padding.only(top=10)
     )
 
     return ft.ListView(

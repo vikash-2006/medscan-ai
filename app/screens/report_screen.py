@@ -13,9 +13,9 @@ def build_report_screen(page: ft.Page, navigate_to) -> ft.Control:
                 ft.Text("Scan a lab report or select a preset in the Scanner tab to view AI clinical insights.",
                         size=13, color=ft.Colors.GREY_600, text_align=ft.TextAlign.CENTER),
                 ft.Container(height=12),
-                ft.ElevatedButton("Go to Scanner", icon=ft.Icons.DOCUMENT_SCANNER_ROUNDED, on_click=lambda _: navigate_to(1))
+                ft.FilledButton("Go to Scanner", icon=ft.Icons.DOCUMENT_SCANNER_ROUNDED, on_click=lambda _: navigate_to(1))
             ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment.CENTER,
             padding=32
         )
 
@@ -34,10 +34,10 @@ def build_report_screen(page: ft.Page, navigate_to) -> ft.Control:
             ft.Icon(ft.Icons.SHIELD_OUTLINED, color=urgency_color, size=18),
             ft.Text(f"Triage Status: {urgency}", size=13, weight=ft.FontWeight.BOLD, color=urgency_color)
         ], spacing=6),
-        padding=ft.padding.symmetric(horizontal=12, vertical=6),
+        padding=ft.Padding.symmetric(horizontal=12, vertical=6),
         border_radius=20,
         bgcolor=urgency_bg,
-        border=ft.border.all(1, urgency_color)
+        border=ft.Border.all(1, urgency_color)
     )
 
     summary_card = ft.Card(
@@ -76,13 +76,13 @@ def build_report_screen(page: ft.Page, navigate_to) -> ft.Control:
                             ft.Text(f"{b['value']} {b['unit']}", size=13, weight=ft.FontWeight.BOLD, color=val_color),
                             ft.Text(st, size=10, weight=ft.FontWeight.BOLD, color=val_color),
                         ], horizontal_alignment=ft.CrossAxisAlignment.END),
-                        padding=ft.padding.symmetric(horizontal=8, vertical=4),
+                        padding=ft.Padding.symmetric(horizontal=8, vertical=4),
                         border_radius=8,
                         bgcolor=badge_bg
                     )
                 ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-                padding=ft.padding.symmetric(vertical=6, horizontal=8),
-                border=ft.border.only(bottom=ft.BorderSide(0.5, ft.Colors.GREY_300))
+                padding=ft.Padding.symmetric(vertical=6, horizontal=8),
+                border=ft.Border.only(bottom=ft.BorderSide(0.5, ft.Colors.GREY_300))
             )
         )
 
