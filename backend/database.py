@@ -1,0 +1,188 @@
+import sqlite3
+import json
+import os
+from datetime import datetime
+from typing import List, Dict, Any, Optional
+
+DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "medscan.db")
+
+def init_db():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS reports (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        raw_text TEXT,
+        biomarkers TEXT,
+        explanation TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+    
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS risk_assessments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        patient_name TEXT,
+        vitals TEXT,
+        predicted_risk TEXT,
+        risk_probability REAL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS audit_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        level TEXT NOT NULL,
+        category TEXT NOT NULL,
+        action TEXT NOT NULL,
+        details TEXT,
+        ip_address TEXT
+    )
+    """)
+    
+    conn.commit()
+    conn.close()
+
+def save_report(title: str, raw_text: str, biomarkers: List[Dict[str, Any]], explanation: Dict[str, Any]) -> int:
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO reports (title, raw_text, biomarkers, explanation)
+        VALUES (?, ?, ?, ?)
+    """, (title, raw_text, json.dumps(biomarkers), json.dumps(explanation)))
+    report_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    return report_id
+
+def get_reports(limit: int = 20) -> List[Dict[str, Any]]:
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT id, title, raw_text, biomarkers, explanation, created_at 
+        FROM reports 
+        ORDER BY id DESC LIMIT ?
+    """, (limit,))
+    rows = cursor.fetchall()
+    conn.close()
+    
+    reports = []
+    for r in rows:
+        reports.append({
+            "id": r["id"],
+            "title": r["title"],
+            "raw_text": r["raw_text"],
+            "biomarkers": json.loads(r["biomarkers"]) if r["biomarkers"] else [],
+            "explanation": json.loads(r["explanation"]) if r["explanation"] else {},
+            "created_at": r["created_at"]
+        })
+    return reports
+
+def save_risk_assessment(patient_name: str, vitals: Dict[str, Any], risk: str, prob: float) -> int:
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO risk_assessments (patient_name, vitals, predicted_risk, risk_probability)
+        VALUES (?, ?, ?, ?)
+    """, (patient_name, json.dumps(vitals), risk, prob))
+    assessment_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    return assessment_id
+
+def get_risk_assessments(limit: int = 10) -> List[Dict[str, Any]]:
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT id, patient_name, vitals, predicted_risk, risk_probability, created_at
+        FROM risk_assessments
+        ORDER BY id DESC LIMIT ?
+    """, (limit,))
+    rows = cursor.fetchall()
+    conn.close()
+    
+    results = []
+    for r in rows:
+        results.append({
+            "id": r["id"],
+            "patient_name": r["patient_name"],
+            "vitals": json.loads(r["vitals"]) if r["vitals"] else {},
+            "predicted_risk": r["predicted_risk"],
+            "risk_probability": r["risk_probability"],
+            "created_at": r["created_at"]
+        })
+    return results
+
+def insert_log(level: str, category: str, action: str, details: Optional[Dict[str, Any]] = None, ip_address: Optional[str] = None) -> int:
+    """
+    Stores an audit log event into the SQLite audit_logs table.
+    """
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    details_str = json.dumps(details) if details else None
+    cursor.execute("""
+        INSERT INTO audit_logs (level, category, action, details, ip_address)
+        VALUES (?, ?, ?, ?, ?)
+    """, (level.upper(), category.upper(), action, details_str, ip_address or "127.0.0.1"))
+    log_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    return log_id
+
+def get_audit_logs(limit: int = 50, category: Optional[str] = None, level: Optional[str] = None) -> List[Dict[str, Any]]:
+    """
+    Retrieves recent audit logs with optional category and level filtering.
+    """
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    
+    query = "SELECT id, timestamp, level, category, action, details, ip_address FROM audit_logs"
+    params = []
+    conditions = []
+    
+    if category:
+        conditions.append("category = ?")
+        params.append(category.upper())
+    if level:
+        conditions.append("level = ?")
+        params.append(level.upper())
+        
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
+        
+    query += " ORDER BY id DESC LIMIT ?"
+    params.append(limit)
+    
+    cursor.execute(query, tuple(params))
+    rows = cursor.fetchall()
+    conn.close()
+    
+    logs = []
+    for r in rows:
+        details_val = None
+        if r["details"]:
+            try:
+                details_val = json.loads(r["details"])
+            except Exception:
+                details_val = r["details"]
+        logs.append({
+            "id": r["id"],
+            "timestamp": r["timestamp"],
+            "level": r["level"],
+            "category": r["category"],
+            "action": r["action"],
+            "details": details_val,
+            "ip_address": r["ip_address"]
+        })
+    return logs
+
+if __name__ == "__main__":
+    init_db()
+    print("Database initialized successfully at:", DB_PATH)

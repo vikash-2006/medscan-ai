@@ -1,0 +1,24 @@
+==============================================================
+                 APOLLO PREVENTIVE HEALTH CHECKUP
+--------------------------------------------------------------
+Patient Name : Vikash Kumawat              Age/Gender : 24 Y / Male
+Date         : 16-Nov-2026                 Category   : Executive Health
+--------------------------------------------------------------
+TEST DESCRIPTION                   OBSERVED VALUE   UNITS     BIOLOGICAL REF
+--------------------------------------------------------------
+COMPLETE BLOOD COUNT (CBC)
+Hemoglobin (Hb)                    15.2             g/dL      13.0 - 17.0   [NORMAL]
+Total Leucocyte Count (TLC/WBC)    7200             /cumm     4000 - 11000  [NORMAL]
+Platelet Count                     2.9              lakh/cumm 1.5 - 4.5     [NORMAL]
+
+METABOLIC & LIPID SCREENING
+Fasting Blood Sugar (FBS)          88.0             mg/dL     70.0 - 100.0  [NORMAL]
+HbA1c                              5.1              %         4.0 - 5.6     [NORMAL]
+Total Cholesterol                  165.0            mg/dL     125.0 - 200.0 [NORMAL]
+Blood Pressure                     118/78           mmHg      120/80        [NORMAL]
+Body Mass Index (BMI)              22.4             kg/m²     18.5 - 24.9   [NORMAL]
+--------------------------------------------------------------
+CLINICAL IMPRESSION:
+- Normal hematological parameters and excellent glycemic control.
+- Low cardiovascular risk profile.
+==============================================================
