@@ -1,4 +1,5 @@
 import sys
+import app  # Injects Flet 1.1+ compatibility shims & module monkeypatches
 import flet as ft
 from app.main import main
 

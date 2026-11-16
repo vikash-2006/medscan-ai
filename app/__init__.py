@@ -32,12 +32,40 @@ if hasattr(ft, "Colors"):
 # 3. Class references for controls and geometry
 if hasattr(ft, "Padding"):
     ft.padding = ft.Padding
+    # Monkeypatch the module 'flet.controls.padding' directly so
+    # module 'flet.controls.padding' has no attribute 'symmetric' NEVER occurs!
+    try:
+        import flet.controls.padding as _mod_padding
+        _mod_padding.symmetric = ft.Padding.symmetric
+        _mod_padding.all = ft.Padding.all
+        _mod_padding.only = ft.Padding.only
+        _mod_padding.zero = ft.Padding.zero
+    except Exception:
+        pass
+
 if hasattr(ft, "BorderRadius"):
     ft.border_radius = ft.BorderRadius
+    try:
+        import flet.controls.border_radius as _mod_br
+        _mod_br.all = ft.BorderRadius.all
+        _mod_br.only = ft.BorderRadius.only
+        _mod_br.horizontal = ft.BorderRadius.horizontal
+        _mod_br.vertical = ft.BorderRadius.vertical
+    except Exception:
+        pass
+
 if hasattr(ft, "Margin"):
     ft.margin = ft.Margin
 if hasattr(ft, "Border"):
     ft.border = ft.Border
+    try:
+        import flet.controls.border as _mod_border
+        _mod_border.all = ft.Border.all
+        _mod_border.only = ft.Border.only
+        _mod_border.symmetric = ft.Border.symmetric
+    except Exception:
+        pass
+
 if hasattr(ft, "BoxFit"):
     ft.ImageFit = ft.BoxFit
 if hasattr(ft, "Button") and not hasattr(ft, "ElevatedButton"):
