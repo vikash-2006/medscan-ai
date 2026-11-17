@@ -5,10 +5,6 @@ import types
 # ---------------------------------------------------------------------------
 # Android Packaging & Module Resolution Setup
 # ---------------------------------------------------------------------------
-# When serious_python runs main.py inside the Android APK root directory
-# (e.g. /tmp/serious_python_temp.../main.py), 'app' does not exist as a subfolder.
-# We ensure the script directory is in sys.path and register an 'app' module
-# alias in sys.modules so all 'from app... import ...' imports succeed.
 current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
     sys.path.insert(0, current_dir)
@@ -22,9 +18,8 @@ if "app" not in sys.modules:
 import flet as ft
 
 # ---------------------------------------------------------------------------
-# Flet 1.1+ Compatibility Shims
+# Flet 1.1+ Compatibility Shims & Module Monkeypatching
 # ---------------------------------------------------------------------------
-# 1. Colors enum aliases (BLACK87 -> BLACK_87, WHITE70 -> WHITE_70, etc.)
 if hasattr(ft, "Colors"):
     for _name in list(dir(ft.Colors)):
         if "_" in _name:
@@ -35,7 +30,6 @@ if hasattr(ft, "Colors"):
                 pass
     ft.colors = ft.Colors
 
-# 2. Controls & Properties
 if hasattr(ft, "Padding"):
     ft.padding = ft.Padding
     try:
@@ -75,7 +69,6 @@ if hasattr(ft, "BoxFit"):
 if hasattr(ft, "Button") and not hasattr(ft, "ElevatedButton"):
     ft.ElevatedButton = ft.Button
 
-# 3. Chip avatar -> leading compatibility wrapper
 if hasattr(ft, "Chip") and not hasattr(ft, "ActionChip"):
     def _ActionChip(**kwargs):
         if "avatar" in kwargs:
@@ -83,7 +76,6 @@ if hasattr(ft, "Chip") and not hasattr(ft, "ActionChip"):
         return ft.Chip(**kwargs)
     ft.ActionChip = _ActionChip
 
-# 4. Alignment lowercase properties
 if hasattr(ft, "Alignment"):
     for _name in [
         "CENTER", "TOP_LEFT", "TOP_RIGHT", "BOTTOM_LEFT", "BOTTOM_RIGHT",
@@ -96,27 +88,32 @@ if hasattr(ft, "Alignment"):
                 pass
     ft.alignment = ft.Alignment
 
-# 5. App runner
 if not hasattr(ft, "app") and hasattr(ft, "run"):
     ft.app = ft.run
 
 # ---------------------------------------------------------------------------
-# Application Imports
+# Screen Imports
 # ---------------------------------------------------------------------------
 from app.state import state
-from app.screens.android_home_screen import build_android_home_screen
-from app.screens.android_consult_screen import build_android_consult_screen
+from app.screens.sanjeevani_splash_screen import build_sanjeevani_splash_screen
+from app.screens.sanjeevani_home_screen import build_sanjeevani_home_screen
+from app.screens.sanjeevani_doctors_screen import build_sanjeevani_doctors_screen
+from app.screens.sanjeevani_profile_screen import build_sanjeevani_profile_screen
+from app.screens.sanjeevani_appointments_screen import build_sanjeevani_appointments_screen
+from app.screens.sanjeevani_video_screen import build_sanjeevani_video_screen
+from app.screens.sanjeevani_medicine_screen import build_sanjeevani_medicine_screen
+from app.screens.sanjeevani_user_profile_screen import build_sanjeevani_user_profile_screen
 from app.screens.scan_screen import build_scan_screen
 from app.screens.risk_screen import build_risk_screen
-from app.screens.history_screen import build_history_screen
+from app.screens.report_screen import build_report_screen
 
 def main(page: ft.Page):
-    page.title = "MedScan AI — Android Mobile App"
+    page.title = "Sanjeevani Healthcare — Android Mobile App"
     page.theme_mode = ft.ThemeMode.LIGHT
     page.bgcolor = "#F8FAFC"
     page.padding = 0
 
-    # Mobile frame simulator default sizing for desktop test
+    # Mobile frame sizing for desktop simulation
     try:
         if hasattr(page, "window") and page.window:
             page.window.width = 412
@@ -125,71 +122,112 @@ def main(page: ft.Page):
     except Exception:
         pass
 
-    current_index = 0
+    current_screen = "home"
+    current_tab_index = 0
     main_content_area = ft.Container(expand=True, bgcolor="#F8FAFC")
     nav_container = ft.Container()
 
-    def build_bottom_nav(selected_idx: int):
-        def create_nav_item(idx: int, icon_data, label: str):
-            is_active = (idx == selected_idx)
-            if is_active:
-                return ft.Container(
-                    content=ft.Row([
-                        ft.Icon(icon_data, color=ft.Colors.WHITE, size=18),
-                        ft.Text(label, size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE)
-                    ], spacing=5),
-                    padding=ft.Padding.symmetric(horizontal=14, vertical=8),
-                    border_radius=18,
-                    bgcolor="#2563EB",  # Vibrant Royal Blue active pill
-                    ink=True,
-                    on_click=lambda _: navigate_to(idx)
-                )
-            else:
-                return ft.Container(
-                    content=ft.Icon(icon_data, color=ft.Colors.WHITE_70, size=22),
-                    padding=ft.Padding.symmetric(horizontal=12, vertical=8),
-                    ink=True,
-                    on_click=lambda _: navigate_to(idx)
-                )
+    # iOS-Inspired Clean White Bottom Navigation Bar
+    def build_ios_bottom_nav(active_tab: int):
+        tabs = [
+            (0, ft.Icons.HOME_ROUNDED, "Home", "home"),
+            (1, ft.Icons.CALENDAR_MONTH_ROUNDED, "Appointments", "appointments"),
+            (2, ft.Icons.FOLDER_SHARED_ROUNDED, "Records", "scan_lab"),
+            (3, ft.Icons.PERSON_ROUNDED, "Profile", "user_profile"),
+        ]
+
+        def create_tab_item(idx: int, icon_data, label: str, target_route: str):
+            is_active = (idx == active_tab)
+            color = "#2563EB" if is_active else "#94A3B8"
+            weight = ft.FontWeight.BOLD if is_active else ft.FontWeight.W_500
+
+            return ft.Container(
+                content=ft.Column([
+                    ft.Icon(icon_data, color=color, size=24),
+                    ft.Text(label, size=10, weight=weight, color=color)
+                ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=2),
+                padding=ft.Padding.symmetric(vertical=6, horizontal=16),
+                ink=True,
+                on_click=lambda _: navigate_to(target_route)
+            )
 
         return ft.Container(
             content=ft.Row([
-                create_nav_item(0, ft.Icons.HOME_ROUNDED, "Home"),
-                create_nav_item(1, ft.Icons.CALENDAR_MONTH_ROUNDED, "Visits"),
-                create_nav_item(2, ft.Icons.DOCUMENT_SCANNER_ROUNDED, "Scan Lab"),
-                create_nav_item(3, ft.Icons.HEALTH_AND_SAFETY_ROUNDED, "Risk ML"),
-                create_nav_item(4, ft.Icons.HISTORY_ROUNDED, "History"),
+                create_tab_item(t[0], t[1], t[2], t[3]) for t in tabs
             ], alignment=ft.MainAxisAlignment.SPACE_AROUND),
-            padding=ft.Padding.symmetric(horizontal=10, vertical=6),
-            border_radius=28,
-            bgcolor="#1E3A8A",  # Deep Blue matching the reference UI
-            shadow=ft.BoxShadow(spread_radius=1, blur_radius=14, color=ft.Colors.BLACK_26),
-            margin=ft.Padding.symmetric(horizontal=16, vertical=8)
+            padding=ft.Padding.symmetric(vertical=6),
+            bgcolor=ft.Colors.WHITE,
+            border=ft.Border.only(top=ft.BorderSide(1, "#E2E8F0")),
+            shadow=ft.BoxShadow(spread_radius=0, blur_radius=10, color=ft.Colors.with_opacity(0.05, "#000000"))
         )
 
-    def navigate_to(index: int):
-        nonlocal current_index
-        current_index = index
+    def navigate_to(target):
+        nonlocal current_screen, current_tab_index
 
-        if index == 0:
-            main_content_area.content = build_android_home_screen(page, navigate_to)
-        elif index == 1:
-            main_content_area.content = build_android_consult_screen(page, navigate_to)
-        elif index == 2:
+        # Handle integer tab indexes or string route names
+        if isinstance(target, int):
+            route_map = {0: "home", 1: "appointments", 2: "scan_lab", 3: "user_profile", 4: "reports"}
+            target_route = route_map.get(target, "home")
+        else:
+            target_route = target
+
+        current_screen = target_route
+
+        # Map active bottom tab index
+        if target_route in ["home", "splash"]:
+            current_tab_index = 0
+        elif target_route in ["appointments", "doctors", "profile", "video_call"]:
+            current_tab_index = 1
+        elif target_route in ["scan_lab", "reports", "risk_ml"]:
+            current_tab_index = 2
+        elif target_route in ["user_profile", "medicines"]:
+            current_tab_index = 3
+
+        # Route resolution to view builders
+        if target_route == "splash":
+            main_content_area.content = build_sanjeevani_splash_screen(page, navigate_to)
+            nav_container.visible = False
+        elif target_route == "home":
+            main_content_area.content = build_sanjeevani_home_screen(page, navigate_to)
+            nav_container.visible = True
+        elif target_route == "doctors":
+            main_content_area.content = build_sanjeevani_doctors_screen(page, navigate_to)
+            nav_container.visible = True
+        elif target_route == "profile":
+            main_content_area.content = build_sanjeevani_profile_screen(page, navigate_to)
+            nav_container.visible = False
+        elif target_route == "appointments":
+            main_content_area.content = build_sanjeevani_appointments_screen(page, navigate_to)
+            nav_container.visible = True
+        elif target_route == "video_call":
+            main_content_area.content = build_sanjeevani_video_screen(page, navigate_to)
+            nav_container.visible = False
+        elif target_route == "medicines":
+            main_content_area.content = build_sanjeevani_medicine_screen(page, navigate_to)
+            nav_container.visible = True
+        elif target_route == "scan_lab":
             main_content_area.content = build_scan_screen(page, navigate_to)
-        elif index == 3:
+            nav_container.visible = True
+        elif target_route == "reports":
+            main_content_area.content = build_report_screen(page, navigate_to)
+            nav_container.visible = True
+        elif target_route == "risk_ml":
             main_content_area.content = build_risk_screen(page, navigate_to)
-        elif index == 4:
-            main_content_area.content = build_history_screen(page, navigate_to)
+            nav_container.visible = True
+        elif target_route == "user_profile":
+            main_content_area.content = build_sanjeevani_user_profile_screen(page, navigate_to)
+            nav_container.visible = True
+        else:
+            main_content_area.content = build_sanjeevani_home_screen(page, navigate_to)
+            nav_container.visible = True
 
-        nav_container.content = build_bottom_nav(current_index)
+        nav_container.content = build_ios_bottom_nav(current_tab_index)
         page.update()
 
-    # Initial setup
-    nav_container.content = build_bottom_nav(0)
-    navigate_to(0)
+    # Initial screen launch: Home Dashboard
+    nav_container.content = build_ios_bottom_nav(0)
+    navigate_to("home")
 
-    # Page layout: Main content scroll on top + fixed floating deep blue navbar at bottom
     page.add(
         ft.Column([
             main_content_area,
