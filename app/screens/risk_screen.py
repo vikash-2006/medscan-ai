@@ -1,5 +1,6 @@
 import flet as ft
 from app.state import state
+from app.utils import show_snackbar
 
 def build_risk_screen(page: ft.Page, navigate_to) -> ft.Control:
     vitals = state.current_vitals
@@ -125,7 +126,7 @@ def build_risk_screen(page: ft.Page, navigate_to) -> ft.Control:
         except Exception as ex:
             loading_ring.visible = False
             predict_btn.disabled = False
-            page.open(ft.SnackBar(ft.Text(f"Error predicting risk: {str(ex)}")))
+            show_snackbar(page, f"Error predicting risk: {str(ex)}", bgcolor="#DC2626")
             page.update()
 
     predict_btn = ft.FilledButton(

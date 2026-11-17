@@ -1,4 +1,9 @@
 import sys
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 import app  # Injects Flet 1.1+ compatibility shims & module monkeypatches
 import flet as ft
 from app.main import main

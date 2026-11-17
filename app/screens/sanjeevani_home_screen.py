@@ -1,6 +1,7 @@
 import os
 import flet as ft
 from app.state import state
+from app.utils import show_snackbar
 
 _BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _ASSETS_DIR = os.path.join(_BASE_DIR, "assets")
@@ -62,7 +63,7 @@ def build_sanjeevani_home_screen(page: ft.Page, navigate_to) -> ft.Control:
                     border=ft.Border.all(1, "#E2E8F0"),
                     alignment=ft.Alignment.CENTER,
                     ink=True,
-                    on_click=lambda _: page.open(ft.SnackBar(ft.Text("Your Sanjeevani health sync is active!")))
+                    on_click=lambda _: show_snackbar(page, "Your Sanjeevani health sync is active! All vitals normal.", bgcolor="#2563EB")
                 ),
                 ft.Container(
                     width=9,
@@ -209,6 +210,35 @@ def build_sanjeevani_home_screen(page: ft.Page, navigate_to) -> ft.Control:
         padding=ft.Padding.symmetric(horizontal=18, vertical=2)
     )
 
+    def select_and_book(name: str):
+        if "Ananya" in name:
+            state.selected_doctor = {
+                "name": "Dr. Ananya Sharma",
+                "specialty": "Cardiologist",
+                "category": "Cardiology",
+                "rating": "4.9",
+                "reviews": "980",
+                "experience": "9+ Years",
+                "patients": "3.1K+",
+                "avatar": "doctor_female.jpg",
+                "fee": "₹700",
+                "about": "Dr. Ananya Sharma is an experienced Interventional Cardiologist specializing in preventive cardiac care and lipid metabolic optimization."
+            }
+        else:
+            state.selected_doctor = {
+                "name": "Dr. Rohan Mehta",
+                "specialty": "General Physician",
+                "category": "General",
+                "rating": "4.8",
+                "reviews": "1,240",
+                "experience": "7+ Years",
+                "patients": "2.5K+",
+                "avatar": "doctor_portrait.jpg",
+                "fee": "₹500",
+                "about": "Dr. Rohan Mehta is a Senior Consultant Physician specializing in primary care, chronic condition management, and preventive health screenings."
+            }
+        navigate_to("profile")
+
     def create_preview_doctor_card(name: str, specialty: str, rating: str, img_src: str):
         return ft.Container(
             content=ft.Row([
@@ -234,7 +264,7 @@ def build_sanjeevani_home_screen(page: ft.Page, navigate_to) -> ft.Control:
                     border_radius=12,
                     bgcolor="#2563EB",
                     ink=True,
-                    on_click=lambda _: navigate_to("profile")
+                    on_click=lambda _: select_and_book(name)
                 )
             ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN, vertical_alignment=ft.CrossAxisAlignment.CENTER),
             padding=12,
@@ -244,7 +274,7 @@ def build_sanjeevani_home_screen(page: ft.Page, navigate_to) -> ft.Control:
             shadow=ft.BoxShadow(spread_radius=0, blur_radius=6, color=ft.Colors.with_opacity(0.04, "#000000")),
             margin=ft.Padding.symmetric(horizontal=18, vertical=4),
             ink=True,
-            on_click=lambda _: navigate_to("profile")
+            on_click=lambda _: select_and_book(name)
         )
 
     # Scrollable Assembly

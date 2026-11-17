@@ -91,6 +91,50 @@ if hasattr(ft, "Alignment"):
 if not hasattr(ft, "app") and hasattr(ft, "run"):
     ft.app = ft.run
 
+# Page.open & Page.close cross-version shims
+try:
+    import flet.controls.page as _fp
+
+    def _page_open_shim(self, control):
+        if hasattr(self, "show_dialog") and callable(self.show_dialog):
+            try:
+                return self.show_dialog(control)
+            except Exception:
+                pass
+        if hasattr(self, "overlay"):
+            if control not in self.overlay:
+                self.overlay.append(control)
+            if hasattr(control, "open"):
+                control.open = True
+            self.update()
+            return control
+        if hasattr(control, "open"):
+            control.open = True
+            self.update()
+            return control
+
+    def _page_close_shim(self, control=None):
+        if hasattr(self, "pop_dialog") and callable(self.pop_dialog):
+            try:
+                return self.pop_dialog()
+            except Exception:
+                pass
+        if control is not None and hasattr(control, "open"):
+            control.open = False
+            self.update()
+
+    if not hasattr(_fp.Page, "open"):
+        _fp.Page.open = _page_open_shim
+    if not hasattr(_fp.Page, "close"):
+        _fp.Page.close = _page_close_shim
+    if hasattr(ft, "Page"):
+        if not hasattr(ft.Page, "open"):
+            ft.Page.open = _page_open_shim
+        if not hasattr(ft.Page, "close"):
+            ft.Page.close = _page_close_shim
+except Exception:
+    pass
+
 # ---------------------------------------------------------------------------
 # Screen Imports
 # ---------------------------------------------------------------------------

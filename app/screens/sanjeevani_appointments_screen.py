@@ -1,6 +1,7 @@
 import os
 import flet as ft
 from app.state import state
+from app.utils import show_snackbar, show_dialog_modal
 
 _BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _ASSETS_DIR = os.path.join(_BASE_DIR, "assets")
@@ -8,8 +9,6 @@ _ASSETS_DIR = os.path.join(_BASE_DIR, "assets")
 def _get_asset(filename: str) -> str:
     path = os.path.join(_ASSETS_DIR, filename)
     return path if os.path.exists(path) else f"/{filename}"
-
-DOCTOR_ROHAN = _get_asset("doctor_portrait.jpg")
 
 def build_sanjeevani_appointments_screen(page: ft.Page, navigate_to) -> ft.Control:
     # 1. Top Status Bar
@@ -30,31 +29,52 @@ def build_sanjeevani_appointments_screen(page: ft.Page, navigate_to) -> ft.Contr
         content=ft.Row([
             ft.Text("My Appointments", size=20, weight=ft.FontWeight.BOLD, color="#0F172A"),
             ft.Container(
-                content=ft.Icon(ft.Icons.CALENDAR_MONTH_ROUNDED, color="#2563EB", size=20),
+                content=ft.Icon(ft.Icons.ADD_ROUNDED, color="#2563EB", size=22),
                 width=38,
                 height=38,
                 border_radius=19,
                 bgcolor="#EAF4FF",
                 alignment=ft.Alignment.CENTER,
-                ink=True
+                ink=True,
+                on_click=lambda _: navigate_to("doctors")
             )
         ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
         padding=ft.Padding.symmetric(horizontal=18, vertical=8)
     )
+
+    # Get active appointment from state
+    active_appt = state.booked_appointments[0] if state.booked_appointments else {
+        "doctor_name": "Dr. Rohan Mehta",
+        "specialty": "General Physician • Consultation",
+        "date_str": "Tue, 17 Nov 2026",
+        "time_str": "11:00 AM",
+        "status": "Confirmed",
+        "avatar": "doctor_portrait.jpg",
+        "fee": "₹500"
+    }
+
+    doc_avatar = _get_asset(active_appt.get("avatar", "doctor_portrait.jpg"))
+
+    def cancel_active_appointment(e):
+        if state.booked_appointments:
+            state.booked_appointments.pop(0)
+        show_snackbar(page, "Appointment successfully cancelled and refund initiated.", bgcolor="#DC2626")
+        page.update()
+        navigate_to("appointments")
 
     # 3. Upcoming Appointment Pass Card
     active_pass = ft.Container(
         content=ft.Column([
             ft.Row([
                 ft.Row([
-                    ft.Image(src=DOCTOR_ROHAN, width=48, height=48, fit=ft.BoxFit.COVER, border_radius=14),
+                    ft.Image(src=doc_avatar, width=48, height=48, fit=ft.BoxFit.COVER, border_radius=14),
                     ft.Column([
-                        ft.Text("Dr. Rohan Mehta", size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
-                        ft.Text("General Physician • Consultation", size=11, color=ft.Colors.with_opacity(0.85, ft.Colors.WHITE)),
+                        ft.Text(active_appt["doctor_name"], size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+                        ft.Text(active_appt["specialty"], size=11, color=ft.Colors.with_opacity(0.85, ft.Colors.WHITE)),
                     ], spacing=1)
                 ], spacing=10),
                 ft.Container(
-                    content=ft.Text("Confirmed", size=10, weight=ft.FontWeight.BOLD, color="#16A34A"),
+                    content=ft.Text(active_appt.get("status", "Confirmed"), size=10, weight=ft.FontWeight.BOLD, color="#16A34A"),
                     padding=ft.Padding.symmetric(horizontal=8, vertical=3),
                     border_radius=8,
                     bgcolor=ft.Colors.WHITE
@@ -67,12 +87,12 @@ def build_sanjeevani_appointments_screen(page: ft.Page, navigate_to) -> ft.Contr
                 content=ft.Row([
                     ft.Row([
                         ft.Icon(ft.Icons.CALENDAR_TODAY_ROUNDED, size=14, color="#1D4ED8"),
-                        ft.Text("Tue, 17 Nov 2026", size=11, weight=ft.FontWeight.BOLD, color="#1D4ED8")
+                        ft.Text(active_appt["date_str"], size=11, weight=ft.FontWeight.BOLD, color="#1D4ED8")
                     ], spacing=4),
                     ft.Container(width=1, height=14, bgcolor="#CBD5E1"),
                     ft.Row([
                         ft.Icon(ft.Icons.ACCESS_TIME_ROUNDED, size=14, color="#1D4ED8"),
-                        ft.Text("11:00 AM", size=11, weight=ft.FontWeight.BOLD, color="#1D4ED8")
+                        ft.Text(active_appt["time_str"], size=11, weight=ft.FontWeight.BOLD, color="#1D4ED8")
                     ], spacing=4)
                 ], alignment=ft.MainAxisAlignment.SPACE_AROUND),
                 padding=ft.Padding.symmetric(horizontal=12, vertical=8),
@@ -81,7 +101,7 @@ def build_sanjeevani_appointments_screen(page: ft.Page, navigate_to) -> ft.Contr
             ),
 
             ft.Container(height=10),
-            # Actions Row
+            # Actions Row: Join Video Call & Reschedule
             ft.Row([
                 ft.FilledButton(
                     content=ft.Row([
@@ -94,7 +114,7 @@ def build_sanjeevani_appointments_screen(page: ft.Page, navigate_to) -> ft.Contr
                         shape=ft.RoundedRectangleBorder(radius=12)
                     ),
                     expand=True,
-                    height=40,
+                    height=42,
                     on_click=lambda _: navigate_to("video_call")
                 ),
                 ft.OutlinedButton(
@@ -103,7 +123,7 @@ def build_sanjeevani_appointments_screen(page: ft.Page, navigate_to) -> ft.Contr
                         side=ft.BorderSide(1, ft.Colors.WHITE70),
                         shape=ft.RoundedRectangleBorder(radius=12)
                     ),
-                    height=40,
+                    height=42,
                     on_click=lambda _: navigate_to("doctors")
                 )
             ], spacing=8)
@@ -120,12 +140,22 @@ def build_sanjeevani_appointments_screen(page: ft.Page, navigate_to) -> ft.Contr
     )
 
     # 4. QR Code Digital Check-in
+    def show_qr_modal(e):
+        qr_content = ft.Column([
+            ft.Icon(ft.Icons.QR_CODE_2_ROUNDED, size=120, color="#2563EB"),
+            ft.Text(f"Token #SJH-4409\n{active_appt['doctor_name']}", size=13, weight=ft.FontWeight.BOLD,
+                    text_align=ft.TextAlign.CENTER, color="#0F172A"),
+            ft.Text(f"{active_appt['date_str']} • {active_appt['time_str']}\nPresent at Sanjeevani Kiosk reception counter.",
+                    size=11, color="#64748B", text_align=ft.TextAlign.CENTER)
+        ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=6)
+        show_dialog_modal(page, "Digital Check-In Pass", qr_content)
+
     qr_card = ft.Container(
         content=ft.Row([
-            ft.Icon(ft.Icons.QR_CODE_2_ROUNDED, size=48, color="#2563EB"),
+            ft.Icon(ft.Icons.QR_CODE_2_ROUNDED, size=46, color="#2563EB"),
             ft.Column([
                 ft.Text("Digital Clinic Check-in Pass", size=13, weight=ft.FontWeight.BOLD, color="#0F172A"),
-                ft.Text("Scan this QR code upon arrival at Sanjeevani Clinic.", size=11, color="#64748B"),
+                ft.Text("Tap to view QR barcode pass for fast-track entry.", size=11, color="#64748B"),
             ], expand=True, spacing=2),
             ft.Icon(ft.Icons.ARROW_FORWARD_IOS_ROUNDED, size=14, color="#94A3B8")
         ], spacing=10),
@@ -134,32 +164,36 @@ def build_sanjeevani_appointments_screen(page: ft.Page, navigate_to) -> ft.Contr
         bgcolor=ft.Colors.WHITE,
         border=ft.Border.all(1, "#E2E8F0"),
         margin=ft.Padding.symmetric(horizontal=18, vertical=6),
-        shadow=ft.BoxShadow(spread_radius=0, blur_radius=6, color=ft.Colors.with_opacity(0.04, "#000000"))
+        shadow=ft.BoxShadow(spread_radius=0, blur_radius=6, color=ft.Colors.with_opacity(0.04, "#000000")),
+        ink=True,
+        on_click=show_qr_modal
     )
 
     # 5. Past Visits History
-    past_header = ft.Container(
-        content=ft.Text("Past Consultations", size=15, weight=ft.FontWeight.BOLD, color="#0F172A"),
-        padding=ft.Padding.symmetric(horizontal=18, vertical=6)
-    )
-
-    def create_past_visit(name: str, date: str, diagnosis: str):
+    def create_history_card(doc_name: str, spec: str, date_str: str, status: str):
         return ft.Container(
             content=ft.Row([
                 ft.Container(
-                    content=ft.Icon(ft.Icons.CHECK_CIRCLE_ROUNDED, color="#16A34A", size=24),
-                    width=42,
-                    height=42,
-                    border_radius=12,
+                    content=ft.Icon(ft.Icons.CHECK_CIRCLE_ROUNDED, color="#16A34A", size=22),
+                    width=38,
+                    height=38,
+                    border_radius=19,
                     bgcolor="#DCFCE7",
                     alignment=ft.Alignment.CENTER
                 ),
                 ft.Column([
-                    ft.Text(name, size=13, weight=ft.FontWeight.BOLD, color="#0F172A"),
-                    ft.Text(f"{diagnosis} • {date}", size=11, color="#64748B"),
+                    ft.Text(doc_name, size=13, weight=ft.FontWeight.BOLD, color="#0F172A"),
+                    ft.Text(f"{spec} • {date_str}", size=11, color="#64748B"),
                 ], expand=True, spacing=1),
-                ft.TextButton("Rx Slip", on_click=lambda _: navigate_to("reports"))
-            ], spacing=10),
+                ft.Container(
+                    content=ft.Text("Report", size=11, weight=ft.FontWeight.BOLD, color="#2563EB"),
+                    padding=ft.Padding.symmetric(horizontal=10, vertical=4),
+                    border_radius=8,
+                    bgcolor="#EAF4FF",
+                    ink=True,
+                    on_click=lambda _: navigate_to("reports")
+                )
+            ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
             padding=12,
             border_radius=16,
             bgcolor=ft.Colors.WHITE,
@@ -167,15 +201,22 @@ def build_sanjeevani_appointments_screen(page: ft.Page, navigate_to) -> ft.Contr
             margin=ft.Padding.symmetric(horizontal=18, vertical=4)
         )
 
+    history_section = ft.Column([
+        ft.Container(
+            content=ft.Text("Past Consultations", size=15, weight=ft.FontWeight.BOLD, color="#0F172A"),
+            padding=ft.Padding.symmetric(horizontal=18, vertical=6)
+        ),
+        create_history_card("Dr. Ananya Sharma", "Cardiologist", "12 Oct 2026", "Completed"),
+        create_history_card("Dr. Vivek Singh", "Gastroenterologist", "24 Aug 2026", "Completed"),
+    ], spacing=4)
+
     return ft.ListView(
         controls=[
             status_bar,
             header,
             active_pass,
             qr_card,
-            past_header,
-            create_past_visit("Dr. Ananya Sharma", "12 Oct 2026", "Lipid & BP Consultation"),
-            create_past_visit("Dr. Vivek Singh", "28 Aug 2026", "Digestive Health Checkup"),
+            history_section,
             ft.Container(height=35)
         ],
         spacing=4,

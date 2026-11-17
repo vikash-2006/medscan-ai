@@ -1,68 +1,171 @@
 import os
+import re
 import json
 from typing import Dict, Any, List
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 class AIExplainer:
     def __init__(self, api_key: str = None):
-        self.api_key = api_key or os.getenv("GROQ_API_KEY")
+        self.groq_api_key = api_key or os.getenv("GROQ_API_KEY")
+        self.gemini_api_key = os.getenv("GEMINI_API_KEY")
+        self.openai_api_key = os.getenv("OPENAI_API_KEY")
+
         self.groq_client = None
-        if self.api_key:
+        self.gemini_client = None
+        self.openai_client = None
+
+        # 1. Initialize Groq
+        if self.groq_api_key:
             try:
                 from groq import Groq
-                self.groq_client = Groq(api_key=self.api_key)
+                self.groq_client = Groq(api_key=self.groq_api_key)
             except Exception as e:
                 print(f"[Warning] Groq client initialization failed: {e}")
+
+        # 2. Initialize Google Gemini
+        if self.gemini_api_key:
+            try:
+                import google.generativeai as genai
+                genai.configure(api_key=self.gemini_api_key)
+                self.gemini_client = genai
+            except Exception as e:
+                print(f"[Warning] Gemini client initialization failed: {e}")
+
+        # 3. Initialize OpenAI
+        if self.openai_api_key:
+            try:
+                from openai import OpenAI
+                self.openai_client = OpenAI(api_key=self.openai_api_key)
+            except Exception as e:
+                print(f"[Warning] OpenAI client initialization failed: {e}")
 
     def generate_explanation(self, parsed_data: Dict[str, Any], language: str = "hinglish") -> Dict[str, Any]:
         """
         Generates clinical interpretation for extracted medical biomarkers.
-        Uses Groq LLM if available, otherwise uses rich local clinical NLP engine.
+        Cascade: Groq (ultra-fast 120B/20B) -> Gemini -> OpenAI -> Local Clinical NLP Engine.
         """
         biomarkers = parsed_data.get("biomarkers", [])
-        
-        # If Groq is available, call LLM
+        if not biomarkers:
+            return self._local_clinical_explanation(biomarkers, language)
+
+        # 1. Try Groq Cloud
         if self.groq_client:
             try:
                 return self._call_groq_llm(biomarkers, language)
             except Exception as e:
-                print(f"[LLM Error] Groq API call failed: {e}. Falling back to rule-based engine.")
+                print(f"[LLM Warning] Groq call failed: {e}. Trying secondary providers...")
 
-        # Local Clinical NLP Engine
+        # 2. Try Google Gemini
+        if self.gemini_client:
+            try:
+                return self._call_gemini_llm(biomarkers, language)
+            except Exception as e:
+                print(f"[LLM Warning] Gemini call failed: {e}. Trying fallback...")
+
+        # 3. Try OpenAI
+        if self.openai_client:
+            try:
+                return self._call_openai_llm(biomarkers, language)
+            except Exception as e:
+                print(f"[LLM Warning] OpenAI call failed: {e}...")
+
+        # 4. Resilient Local Deterministic Clinical Engine
         return self._local_clinical_explanation(biomarkers, language)
 
+    def _clean_json_response(self, text: str) -> Dict[str, Any]:
+        """Strips markdown code fences and parses valid JSON."""
+        cleaned = text.strip()
+        if "```json" in cleaned:
+            cleaned = cleaned.split("```json", 1)[1]
+            if "```" in cleaned:
+                cleaned = cleaned.split("```", 1)[0]
+        elif "```" in cleaned:
+            cleaned = cleaned.split("```", 1)[1]
+            if "```" in cleaned:
+                cleaned = cleaned.split("```", 1)[0]
+        cleaned = cleaned.strip()
+        return json.loads(cleaned)
+
     def _call_groq_llm(self, biomarkers: List[Dict[str, Any]], language: str) -> Dict[str, Any]:
-        prompt = f"""
-You are MedScan AI, an empathetic and professional medical assistant.
+        prompt = f"""You are MedScan AI, an empathetic and professional medical clinical assistant.
 Given these lab test results:
 {json.dumps(biomarkers, indent=2)}
 
 Provide a clear, patient-friendly report interpretation in {language.upper()}.
-Return ONLY a valid JSON object with the following keys:
-- "summary": A brief 2-line summary of overall health based on these findings.
+Return ONLY a valid JSON object with the following exact keys:
+- "summary": A brief 2-line empathetic summary of overall health based on these findings.
 - "key_findings": List of strings describing each biomarker status (which is normal, which is high/low).
 - "diet_recommendations": List of 3-4 actionable dietary tips.
-- "lifestyle_tips": List of 2-3 lifestyle habits (exercise, sleep, water).
+- "lifestyle_tips": List of 2-3 lifestyle habits (exercise, sleep, hydration).
 - "urgency_level": "Normal", "Moderate Caution", or "High Priority".
-- "doctor_advisory": Recommendation on whether/when to consult a doctor.
+- "doctor_advisory": Recommendation on whether and when to consult a doctor.
 """
-        # Try latest supported models in order
-        models_to_try = ["llama-3.3-70b-versatile", "llama-3.1-70b-versatile", "llama3-8b-8192", "mixtral-8x7b-32768"]
+        models_to_try = [
+            "openai/gpt-oss-120b",
+            "openai/gpt-oss-20b",
+            "qwen/qwen3.8-27b",
+            "llama-3.3-70b-versatile",
+            "llama-3.1-70b-versatile"
+        ]
         for model in models_to_try:
             try:
                 response = self.groq_client.chat.completions.create(
                     model=model,
                     messages=[
-                        {"role": "system", "content": "You are a helpful clinical report interpreter. Always respond in valid JSON format."},
+                        {"role": "system", "content": "You are a helpful clinical report interpreter. Always respond in valid JSON format only."},
                         {"role": "user", "content": prompt}
                     ],
                     response_format={"type": "json_object"},
                     temperature=0.3
                 )
                 content = response.choices[0].message.content
-                return json.loads(content)
-            except Exception as e:
+                return self._clean_json_response(content)
+            except Exception:
                 continue
         raise RuntimeError("All Groq model attempts failed")
+
+    def _call_gemini_llm(self, biomarkers: List[Dict[str, Any]], language: str) -> Dict[str, Any]:
+        prompt = f"""You are MedScan AI, an empathetic and professional medical assistant.
+Given these lab test results:
+{json.dumps(biomarkers, indent=2)}
+
+Provide a patient-friendly report interpretation in {language.upper()}.
+Return ONLY a valid JSON object with these keys:
+"summary", "key_findings", "diet_recommendations", "lifestyle_tips", "urgency_level", "doctor_advisory".
+"""
+        for m_name in ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]:
+            try:
+                model = self.gemini_client.GenerativeModel(m_name)
+                resp = model.generate_content(prompt)
+                return self._clean_json_response(resp.text)
+            except Exception:
+                continue
+        raise RuntimeError("All Gemini model attempts failed")
+
+    def _call_openai_llm(self, biomarkers: List[Dict[str, Any]], language: str) -> Dict[str, Any]:
+        prompt = f"""You are MedScan AI, an empathetic and professional medical assistant.
+Given these lab test results:
+{json.dumps(biomarkers, indent=2)}
+
+Provide a clear, patient-friendly report interpretation in {language.upper()}.
+Return ONLY a valid JSON object with keys:
+"summary", "key_findings", "diet_recommendations", "lifestyle_tips", "urgency_level", "doctor_advisory".
+"""
+        resp = self.openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a clinical report interpreter. Respond in valid JSON."},
+                {"role": "user", "content": prompt}
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.3
+        )
+        return self._clean_json_response(resp.choices[0].message.content)
 
     def _local_clinical_explanation(self, biomarkers: List[Dict[str, Any]], language: str) -> Dict[str, Any]:
         """

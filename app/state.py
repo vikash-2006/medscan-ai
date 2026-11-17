@@ -3,6 +3,12 @@ import re
 import requests
 from typing import Dict, Any, List, Optional
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 # Clinical reference standards for on-device fallback evaluation
 REFERENCE_STANDARDS = {
     "blood_sugar": {"name": "Fasting Blood Sugar", "unit": "mg/dL", "min": 70, "max": 100, "warning_high": 126},
@@ -32,6 +38,39 @@ class AppState:
             "hba1c": 6.0
         }
         self.patient_name = "Vikash Kumawat"
+
+        # Interactive state management
+        self.selected_doctor: Dict[str, Any] = {
+            "name": "Dr. Rohan Mehta",
+            "specialty": "General Physician",
+            "rating": "4.8",
+            "reviews": "1,240",
+            "experience": "7+ Years",
+            "patients": "2.5K+",
+            "avatar": "doctor_portrait.jpg",
+            "fee": "₹500",
+            "about": "Dr. Rohan Mehta is a Senior Consultant Physician specializing in internal medicine, lifestyle disorders, and preventive health management."
+        }
+
+        self.booked_appointments: List[Dict[str, Any]] = [
+            {
+                "doctor_name": "Dr. Rohan Mehta",
+                "specialty": "General Physician • Consultation",
+                "date_str": "Tue, 17 Nov 2026",
+                "time_str": "11:00 AM",
+                "status": "Confirmed",
+                "avatar": "doctor_portrait.jpg",
+                "fee": "₹500"
+            }
+        ]
+
+        self.medicines: List[Dict[str, Any]] = [
+            {"name": "Metformin 500mg", "timing": "Morning • After Breakfast", "slot": "Morning", "taken": True},
+            {"name": "Atorvastatin 10mg", "timing": "Night • Before Bed", "slot": "Night", "taken": False},
+            {"name": "Telmisartan 40mg", "timing": "Morning • After Breakfast", "slot": "Morning", "taken": True},
+            {"name": "Multivitamin & Zinc", "timing": "Afternoon • Post Lunch", "slot": "Afternoon", "taken": False},
+        ]
+
         self.history: List[Dict[str, Any]] = [
             {
                 "title": "Comprehensive Lipid & Metabolic Panel",
@@ -178,12 +217,22 @@ class AppState:
         # Try backend if available
         try:
             url = f"{self.api_base_url}/api/explain"
-            resp = requests.post(url, json=payload, timeout=3.0)
+            resp = requests.post(url, json=payload, timeout=2.5)
             if resp.status_code == 200:
                 self.current_explanation = resp.json().get("explanation", {})
                 return self.current_explanation
         except Exception:
             pass
+
+        # Try on-device Generative AI engine (Groq/Gemini) directly if available
+        try:
+            from backend.ai_explainer import AIExplainer
+            explainer = AIExplainer()
+            if explainer.groq_client or explainer.gemini_client or explainer.openai_client:
+                self.current_explanation = explainer.generate_explanation(self.current_scan_data, language)
+                return self.current_explanation
+        except Exception as e:
+            print(f"[State Explainer Warning] Direct LLM failed: {e}")
 
         # Fast On-Device Empathetic Hinglish Clinical Explainer
         self.current_explanation = self._offline_explain(self.current_scan_data.get("biomarkers", []))

@@ -4,6 +4,12 @@ import shutil
 import tempfile
 import joblib
 import numpy as np
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 from typing import Dict, Any, Optional, List
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware

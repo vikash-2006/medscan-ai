@@ -13,7 +13,7 @@ def build_report_screen(page: ft.Page, navigate_to) -> ft.Control:
                 ft.Text("Scan a lab report or select a preset in the Scanner tab to view AI clinical insights.",
                         size=13, color=ft.Colors.GREY_600, text_align=ft.TextAlign.CENTER),
                 ft.Container(height=12),
-                ft.FilledButton("Go to Scanner", icon=ft.Icons.DOCUMENT_SCANNER_ROUNDED, on_click=lambda _: navigate_to(1))
+                ft.FilledButton("Go to Scanner", icon=ft.Icons.DOCUMENT_SCANNER_ROUNDED, on_click=lambda _: navigate_to("scan_lab"))
             ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
             alignment=ft.Alignment.CENTER,
             padding=32
@@ -149,7 +149,21 @@ def build_report_screen(page: ft.Page, navigate_to) -> ft.Control:
             shape=ft.RoundedRectangleBorder(radius=10)
         ),
         height=48,
-        on_click=lambda _: navigate_to(3)
+        on_click=lambda _: navigate_to("risk_ml")
+    )
+
+    consult_btn = ft.FilledButton(
+        content=ft.Row([
+            ft.Icon(ft.Icons.LOCAL_HOSPITAL_ROUNDED),
+            ft.Text("Consult a Doctor for These Findings", weight=ft.FontWeight.BOLD),
+        ], alignment=ft.MainAxisAlignment.CENTER, spacing=8),
+        style=ft.ButtonStyle(
+            bgcolor="#2563EB",
+            color=ft.Colors.WHITE,
+            shape=ft.RoundedRectangleBorder(radius=10)
+        ),
+        height=48,
+        on_click=lambda _: navigate_to("doctors")
     )
 
     return ft.ListView(
@@ -168,7 +182,9 @@ def build_report_screen(page: ft.Page, navigate_to) -> ft.Control:
             advisory_banner,
             ft.Container(height=10),
             transfer_btn,
-            ft.Container(height=20)
+            ft.Container(height=6),
+            consult_btn,
+            ft.Container(height=25)
         ],
         spacing=8,
         padding=16

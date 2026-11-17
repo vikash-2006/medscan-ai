@@ -1,6 +1,7 @@
 import os
 import flet as ft
 from app.state import state
+from app.utils import show_snackbar, show_dialog_modal
 
 _BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _ASSETS_DIR = os.path.join(_BASE_DIR, "assets")
@@ -24,6 +25,25 @@ def build_sanjeevani_user_profile_screen(page: ft.Page, navigate_to) -> ft.Contr
         padding=ft.Padding.symmetric(horizontal=18, vertical=6)
     )
 
+    def open_edit_profile(e):
+        name_input = ft.TextField(label="Full Name", value=state.patient_name, dense=True)
+
+        def save_name(ev):
+            val = name_input.value.strip()
+            if val:
+                state.patient_name = val
+                if hasattr(page, "pop_dialog"):
+                    page.pop_dialog()
+                show_snackbar(page, f"Profile updated to {val}!", bgcolor="#16A34A")
+                page.update()
+                navigate_to("user_profile")
+
+        dialog_content = ft.Column([
+            name_input,
+            ft.FilledButton("Update Name", on_click=save_name, style=ft.ButtonStyle(bgcolor="#2563EB"))
+        ], tight=True, spacing=12)
+        show_dialog_modal(page, "Edit Patient Profile", dialog_content)
+
     header = ft.Container(
         content=ft.Row([
             ft.Text("Patient Profile", size=20, weight=ft.FontWeight.BOLD, color="#0F172A"),
@@ -34,7 +54,8 @@ def build_sanjeevani_user_profile_screen(page: ft.Page, navigate_to) -> ft.Contr
                 border_radius=19,
                 bgcolor="#EAF4FF",
                 alignment=ft.Alignment.CENTER,
-                ink=True
+                ink=True,
+                on_click=open_edit_profile
             )
         ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
         padding=ft.Padding.symmetric(horizontal=18, vertical=8)
@@ -52,7 +73,7 @@ def build_sanjeevani_user_profile_screen(page: ft.Page, navigate_to) -> ft.Contr
             ),
             ft.Container(height=4),
             ft.Text(state.patient_name, size=18, weight=ft.FontWeight.BOLD, color="#0F172A"),
-            ft.Text("BCA Data Science & AI Engineer", size=12, color="#64748B"),
+            ft.Text("BCA Data Science & AI Engineer • Jaipur", size=12, color="#64748B"),
             ft.Container(
                 content=ft.Row([
                     ft.Icon(ft.Icons.VERIFIED_ROUNDED, size=14, color="#2563EB"),
@@ -67,7 +88,27 @@ def build_sanjeevani_user_profile_screen(page: ft.Page, navigate_to) -> ft.Contr
         alignment=ft.Alignment.CENTER
     )
 
-    # Emergency SOS One-Tap Button
+    # Emergency SOS Dispatcher
+    def trigger_sos_dialog(e):
+        def confirm_sos(ev):
+            if hasattr(page, "pop_dialog"):
+                page.pop_dialog()
+            show_snackbar(page, "🚨 Emergency 108 Dispatch Alert Broadcasted to Nearest Ambulance Network!", bgcolor="#DC2626")
+
+        sos_content = ft.Column([
+            ft.Icon(ft.Icons.WARNING_AMBER_ROUNDED, color="#DC2626", size=54),
+            ft.Text("Confirm Emergency 108 Alert?", size=15, weight=ft.FontWeight.BOLD, color="#991B1B", text_align=ft.TextAlign.CENTER),
+            ft.Text("This will immediately send your live GPS coordinates to Jaipur Emergency Medical Services (108) and emergency contacts.",
+                    size=12, color="#475569", text_align=ft.TextAlign.CENTER),
+            ft.Container(height=8),
+            ft.FilledButton(
+                "Trigger SOS Ambulance Now",
+                style=ft.ButtonStyle(bgcolor="#DC2626"),
+                on_click=confirm_sos
+            )
+        ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=6, tight=True)
+        show_dialog_modal(page, "Emergency SOS Dispatch", sos_content)
+
     sos_card = ft.Container(
         content=ft.Row([
             ft.Container(
@@ -89,8 +130,9 @@ def build_sanjeevani_user_profile_screen(page: ft.Page, navigate_to) -> ft.Contr
         bgcolor="#FEF2F2",
         border=ft.Border.all(1, "#FECACA"),
         margin=ft.Padding.symmetric(horizontal=18, vertical=6),
+        shadow=ft.BoxShadow(spread_radius=0, blur_radius=8, color=ft.Colors.with_opacity(0.04, "#000000")),
         ink=True,
-        on_click=lambda _: page.open(ft.SnackBar(ft.Text("Emergency 108 Alert Triggered with live GPS!"), bgcolor="#DC2626"))
+        on_click=trigger_sos_dialog
     )
 
     # Health Vitals Summary Row
@@ -110,8 +152,8 @@ def build_sanjeevani_user_profile_screen(page: ft.Page, navigate_to) -> ft.Contr
     vitals_row = ft.Container(
         content=ft.Row([
             create_vital_pill("Blood Group", "O+ Positive"),
-            create_vital_pill("Avg Fasting", "120 mg/dL"),
-            create_vital_pill("BMI Index", "25.5 kg/m²"),
+            create_vital_pill("Avg Fasting", f"{int(state.current_vitals.get('blood_sugar', 120))} mg/dL"),
+            create_vital_pill("BMI Index", f"{state.current_vitals.get('bmi', 25.5)} kg/m²"),
         ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
         padding=ft.Padding.symmetric(horizontal=18, vertical=6)
     )
@@ -138,10 +180,17 @@ def build_sanjeevani_user_profile_screen(page: ft.Page, navigate_to) -> ft.Contr
             border_radius=16,
             bgcolor=ft.Colors.WHITE,
             border=ft.Border.all(1, "#E2E8F0"),
-            margin=ft.Padding.symmetric(horizontal=18, vertical=4),
+            margin=ft.Padding.symmetric(horizontal=18, vertical=3),
             ink=True,
             on_click=on_click
         )
+
+    menu_section = ft.Column([
+        create_menu_tile(ft.Icons.RECEIPT_LONG_ROUNDED, "Lab Test Reports", "Clinical biomarker analysis history", lambda _: navigate_to("reports")),
+        create_menu_tile(ft.Icons.FAVORITE_ROUNDED, "Sanjeevani Risk ML Engine", "Cardiometabolic risk assessments", lambda _: navigate_to("risk_ml")),
+        create_menu_tile(ft.Icons.MEDICATION_ROUNDED, "Medicine Schedule", "Active daily dosage reminders", lambda _: navigate_to("medicines")),
+        create_menu_tile(ft.Icons.SECURITY_ROUNDED, "Privacy & ABHA Sync", "Digital health locker linked", lambda _: show_snackbar(page, "ABHA health records encrypted and synced.", bgcolor="#16A34A")),
+    ], spacing=4)
 
     return ft.ListView(
         controls=[
@@ -151,11 +200,7 @@ def build_sanjeevani_user_profile_screen(page: ft.Page, navigate_to) -> ft.Contr
             sos_card,
             vitals_row,
             ft.Container(height=6),
-            create_menu_tile(ft.Icons.SHIELD_OUTLINED, "Health Insurance", "Star Health Comprehensive (Active)"),
-            create_menu_tile(ft.Icons.DOCUMENT_SCANNER_ROUNDED, "My Scanned Reports", "View OCR Biomarkers & History", on_click=lambda _: navigate_to("reports")),
-            create_menu_tile(ft.Icons.PSYCHOLOGY_ROUNDED, "Sanjeevani Risk ML", "Trained Random Forest Classifier", on_click=lambda _: navigate_to("risk_ml")),
-            create_menu_tile(ft.Icons.TRANSLATE_ROUNDED, "Language & Region", "English / Hinglish (Active)"),
-            create_menu_tile(ft.Icons.HELP_OUTLINE_ROUNDED, "Sanjeevani 24/7 Helpline", "Call +91 141-SANJEEVANI"),
+            menu_section,
             ft.Container(height=35)
         ],
         spacing=4,

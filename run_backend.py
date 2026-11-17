@@ -1,4 +1,9 @@
 import uvicorn
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 if __name__ == "__main__":
     print("==================================================")

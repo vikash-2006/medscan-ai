@@ -1,5 +1,6 @@
 import flet as ft
 from app.state import state
+from app.utils import show_snackbar
 
 SAMPLE_REPORTS = {
     "Diabetes & Lipid (High Risk)": """METROPOLITAN DIAGNOSTIC LABS
@@ -78,7 +79,7 @@ def build_scan_screen(page: ft.Page, navigate_to) -> ft.Control:
     def handle_analyze(e):
         txt = report_text_field.value.strip()
         if not txt:
-            page.open(ft.SnackBar(ft.Text("Please enter or paste report text to analyze!")))
+            show_snackbar(page, "Please enter or paste report text to analyze!", bgcolor="#DC2626")
             return
 
         loading_ring.visible = True
@@ -90,7 +91,7 @@ def build_scan_screen(page: ft.Page, navigate_to) -> ft.Control:
             state.current_report_title = title_field.value
             # Step 1: Scan & Parse
             state.scan_medical_report(raw_text=txt)
-            # Step 2: Explain with AI
+            # Step 2: Explain with AI (Groq 120B / Gemini / Clinical NLP Engine)
             state.generate_ai_explanation(language="hinglish")
             
             loading_ring.visible = False
@@ -98,13 +99,13 @@ def build_scan_screen(page: ft.Page, navigate_to) -> ft.Control:
             status_label.value = "Analysis complete! Navigating to insights..."
             page.update()
             
-            # Navigate to Report / Insights Tab (Index 2)
-            navigate_to(2)
+            # Navigate to Report / Insights Screen
+            navigate_to("reports")
         except Exception as ex:
             loading_ring.visible = False
             analyze_btn.disabled = False
             status_label.value = f"Error: {str(ex)}"
-            page.open(ft.SnackBar(ft.Text(f"Failed to analyze report: {str(ex)}")))
+            show_snackbar(page, f"Failed to analyze report: {str(ex)}", bgcolor="#DC2626")
             page.update()
 
     analyze_btn = ft.FilledButton(
