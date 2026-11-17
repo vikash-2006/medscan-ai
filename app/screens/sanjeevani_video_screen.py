@@ -54,7 +54,7 @@ def build_sanjeevani_video_screen(page: ft.Page, navigate_to) -> ft.Control:
             ft.Text(f"Doctor: {doc_name}\nPatient: {state.patient_name}", size=12, color="#64748B"),
             ft.Container(height=4),
             ft.Text("Rx Recommendations:\n1. Tab Metformin 500mg (1-0-1 post meals)\n2. Maintain daily blood sugar log\n3. Reduce simple carbs and 30min brisk walk",
-                    size=12, color="#334155", line_height=1.4),
+                    size=12, color="#334155", style=ft.TextStyle(height=1.4)),
         ], spacing=4)
         show_dialog_modal(page, "Consultation Notes", note_content)
 

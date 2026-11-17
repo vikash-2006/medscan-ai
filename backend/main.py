@@ -23,7 +23,8 @@ from .logger import logger, APP_LOG_FILE
 from .database import (
     init_db, save_report, get_reports, 
     save_risk_assessment, get_risk_assessments,
-    insert_log, get_audit_logs
+    insert_log, get_audit_logs,
+    save_appointment, get_appointments, cancel_appointment
 )
 
 app = FastAPI(title="MedScan AI & Sanjeevani Diagnostic API", version="1.0.0")
@@ -354,6 +355,52 @@ def get_scan_history(limit: int = 15):
         "reports": reports,
         "risk_assessments": risk_checks
     }
+
+class AppointmentBookingRequest(BaseModel):
+    patient_name: Optional[str] = "Vikash Kumawat"
+    doctor_name: str
+    specialty: str
+    date_str: str
+    time_str: str
+    fee: Optional[str] = "₹500"
+    avatar: Optional[str] = "doctor_portrait.jpg"
+    status: Optional[str] = "Confirmed"
+
+@app.post("/api/appointments")
+def create_appointment(req: AppointmentBookingRequest):
+    appt_id = save_appointment(
+        patient_name=req.patient_name,
+        doctor_name=req.doctor_name,
+        specialty=req.specialty,
+        date_str=req.date_str,
+        time_str=req.time_str,
+        fee=req.fee or "₹500",
+        avatar=req.avatar or "doctor_portrait.jpg",
+        status=req.status or "Confirmed"
+    )
+    insert_log(
+        level="INFO",
+        category="APPOINTMENT",
+        action="Booked doctor consultation",
+        details={"appointment_id": appt_id, "doctor": req.doctor_name, "date": req.date_str, "time": req.time_str}
+    )
+    return {
+        "status": "success",
+        "appointment_id": appt_id,
+        "message": f"Appointment booked with {req.doctor_name} for {req.date_str} at {req.time_str}"
+    }
+
+@app.get("/api/appointments")
+def list_appointments(limit: int = 50):
+    return {
+        "status": "success",
+        "appointments": get_appointments(limit=limit)
+    }
+
+@app.delete("/api/appointments/{appointment_id}")
+def remove_appointment(appointment_id: int):
+    success = cancel_appointment(appointment_id)
+    return {"status": "success" if success else "not_found", "cancelled": success}
 
 # Mount and serve modern interactive Web Frontend
 frontend_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend")

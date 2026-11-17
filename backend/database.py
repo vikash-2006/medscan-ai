@@ -43,6 +43,21 @@ def init_db():
         ip_address TEXT
     )
     """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS appointments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        patient_name TEXT NOT NULL,
+        doctor_name TEXT NOT NULL,
+        specialty TEXT NOT NULL,
+        date_str TEXT NOT NULL,
+        time_str TEXT NOT NULL,
+        fee TEXT,
+        avatar TEXT,
+        status TEXT DEFAULT 'Confirmed',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
     
     conn.commit()
     conn.close()
@@ -182,6 +197,64 @@ def get_audit_logs(limit: int = 50, category: Optional[str] = None, level: Optio
             "ip_address": r["ip_address"]
         })
     return logs
+
+def save_appointment(patient_name: str, doctor_name: str, specialty: str, date_str: str, time_str: str, fee: str = "₹500", avatar: str = "doctor_portrait.jpg", status: str = "Confirmed") -> int:
+    """
+    Saves a booked doctor consultation appointment into SQLite database.
+    """
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO appointments (patient_name, doctor_name, specialty, date_str, time_str, fee, avatar, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (patient_name, doctor_name, specialty, date_str, time_str, fee, avatar, status))
+    appt_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    return appt_id
+
+def get_appointments(limit: int = 50) -> List[Dict[str, Any]]:
+    """
+    Retrieves all booked doctor consultations from SQLite database.
+    """
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT id, patient_name, doctor_name, specialty, date_str, time_str, fee, avatar, status, created_at
+        FROM appointments
+        ORDER BY id DESC LIMIT ?
+    """, (limit,))
+    rows = cursor.fetchall()
+    conn.close()
+
+    appointments = []
+    for r in rows:
+        appointments.append({
+            "id": r["id"],
+            "patient_name": r["patient_name"],
+            "doctor_name": r["doctor_name"],
+            "specialty": r["specialty"],
+            "date_str": r["date_str"],
+            "time_str": r["time_str"],
+            "fee": r["fee"],
+            "avatar": r["avatar"],
+            "status": r["status"],
+            "created_at": r["created_at"]
+        })
+    return appointments
+
+def cancel_appointment(appointment_id: int) -> bool:
+    """
+    Cancels or removes an appointment from the database.
+    """
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("UPDATE appointments SET status = 'Cancelled' WHERE id = ?", (appointment_id,))
+    affected = cursor.rowcount
+    conn.commit()
+    conn.close()
+    return affected > 0
 
 if __name__ == "__main__":
     init_db()

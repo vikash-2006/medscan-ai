@@ -267,11 +267,11 @@ def build_sanjeevani_profile_screen(page: ft.Page, navigate_to) -> ft.Control:
             content=ft.Column([
                 ft.Text("About Doctor", size=14, weight=ft.FontWeight.BOLD, color="#0F172A"),
                 ft.Text(doc.get("about", "Specialist physician dedicated to evidence-based healthcare."),
-                        size=12, color="#475569", line_height=1.4),
+                        size=12, color="#475569", style=ft.TextStyle(height=1.4)),
                 ft.Container(height=6),
                 ft.Text("Certifications & Hospital Affiliations", size=13, weight=ft.FontWeight.BOLD, color="#0F172A"),
                 ft.Text("• MBBS, MD (Internal Medicine), AIIMS New Delhi\n• Member of Indian Medical Association (IMA)\n• Sanjeevani Tele-Consultation Advisory Board",
-                        size=11, color="#64748B", line_height=1.4),
+                        size=11, color="#64748B", style=ft.TextStyle(height=1.4)),
             ], spacing=6),
             padding=ft.Padding.symmetric(horizontal=18, vertical=8)
         )
@@ -370,18 +370,15 @@ def build_sanjeevani_profile_screen(page: ft.Page, navigate_to) -> ft.Control:
 
     # 6. Bottom CTA Button: "Confirm Booking"
     def handle_confirm_booking(e):
-        # Save appointment in application state
-        new_appointment = {
-            "doctor_name": doc["name"],
-            "specialty": f"{doc['specialty']} • Consultation",
-            "date_str": selected_date_str + " 2026",
-            "time_str": selected_time_str,
-            "status": "Confirmed",
-            "avatar": doc.get("avatar", "doctor_portrait.jpg"),
-            "fee": doc.get("fee", "₹500")
-        }
-        # Prepend to active appointments
-        state.booked_appointments.insert(0, new_appointment)
+        # Save appointment in SQLite database and application state
+        state.book_appointment(
+            doctor_name=doc["name"],
+            specialty=f"{doc['specialty']} • Consultation",
+            date_str=f"{selected_date_str} 2026",
+            time_str=selected_time_str,
+            fee=doc.get("fee", "₹500"),
+            avatar=doc.get("avatar", "doctor_portrait.jpg")
+        )
 
         show_snackbar(
             page,

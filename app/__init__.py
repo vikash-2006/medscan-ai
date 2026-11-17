@@ -71,6 +71,17 @@ if hasattr(ft, "BoxFit"):
 if hasattr(ft, "Button") and not hasattr(ft, "ElevatedButton"):
     ft.ElevatedButton = ft.Button
 
+# Text parameter compatibility shim (e.g. line_height -> style)
+if hasattr(ft, "Text"):
+    _orig_text_init = ft.Text.__init__
+    def _safe_text_init(self, *args, **kwargs):
+        if "line_height" in kwargs:
+            lh = kwargs.pop("line_height")
+            if "style" not in kwargs or kwargs["style"] is None:
+                kwargs["style"] = ft.TextStyle(height=lh)
+        _orig_text_init(self, *args, **kwargs)
+    ft.Text.__init__ = _safe_text_init
+
 # 4. Chip avatar -> leading compatibility wrapper
 if hasattr(ft, "Chip") and not hasattr(ft, "ActionChip"):
     def _ActionChip(**kwargs):

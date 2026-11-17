@@ -56,9 +56,8 @@ def build_sanjeevani_appointments_screen(page: ft.Page, navigate_to) -> ft.Contr
     doc_avatar = _get_asset(active_appt.get("avatar", "doctor_portrait.jpg"))
 
     def cancel_active_appointment(e):
-        if state.booked_appointments:
-            state.booked_appointments.pop(0)
-        show_snackbar(page, "Appointment successfully cancelled and refund initiated.", bgcolor="#DC2626")
+        state.cancel_active_appointment(0)
+        show_snackbar(page, "Appointment successfully cancelled in database.", bgcolor="#DC2626")
         page.update()
         navigate_to("appointments")
 
