@@ -157,20 +157,34 @@ def build_report_screen(page: ft.Page, navigate_to) -> ft.Control:
     from fpdf import FPDF
     
     import threading
+
+    pdf_status = ft.Text("", size=11, color="#64748B")
+    pdf_loading = ft.ProgressRing(width=16, height=16, stroke_width=2, visible=False)
     
     def download_pdf(e):
+        pdf_loading.visible = True
+        pdf_status.value = "📄 Generating PDF report..."
+        page.update()
+
         def _generate():
-            pdf = FPDF()
-            pdf.add_page()
-            pdf.set_font("Arial", 'B', 16)
-            pdf.cell(200, 10, txt=state.current_report_title, ln=True, align='C')
-            pdf.set_font("Arial", size=12)
-            pdf.multi_cell(0, 10, txt=explanation.get("summary", ""), align='L')
-            # Simplified PDF generation for demo purposes
-            filename = f"report_{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf"
-            pdf.output(filename)
-            show_snackbar(page, f"Report downloaded as {filename}", bgcolor="#16A34A")
-            page.update()
+            try:
+                pdf = FPDF()
+                pdf.add_page()
+                pdf.set_font("Arial", 'B', 16)
+                pdf.cell(200, 10, txt=state.current_report_title, ln=True, align='C')
+                pdf.set_font("Arial", size=12)
+                pdf.multi_cell(0, 10, txt=explanation.get("summary", ""), align='L')
+                filename = f"report_{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf"
+                pdf.output(filename)
+                pdf_loading.visible = False
+                pdf_status.value = f"✅ Saved as {filename}"
+                show_snackbar(page, f"Report downloaded as {filename}", bgcolor="#16A34A")
+                page.update()
+            except Exception as ex:
+                pdf_loading.visible = False
+                pdf_status.value = f"❌ Failed: {str(ex)}"
+                show_snackbar(page, f"PDF error: {str(ex)}", bgcolor="#DC2626")
+                page.update()
         
         threading.Thread(target=_generate, daemon=True).start()
 
@@ -217,6 +231,7 @@ def build_report_screen(page: ft.Page, navigate_to) -> ft.Control:
             consult_btn,
             ft.Container(height=6),
             pdf_btn,
+            ft.Row([pdf_loading, pdf_status], spacing=6),
             ft.Container(height=25)
         ],
         spacing=8,

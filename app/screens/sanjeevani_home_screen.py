@@ -277,6 +277,28 @@ def build_sanjeevani_home_screen(page: ft.Page, navigate_to) -> ft.Control:
             on_click=lambda _: select_and_book(name)
         )
 
+    # Blood Sugar Trends Card
+    trends_card = ft.Container(
+        content=ft.Row([
+            ft.Container(
+                content=ft.Icon(ft.Icons.SHOW_CHART_ROUNDED, color="#2563EB", size=22),
+                width=44, height=44, border_radius=14,
+                bgcolor="#EAF4FF", alignment=ft.Alignment.CENTER
+            ),
+            ft.Column([
+                ft.Text("Blood Sugar Trends 📊", size=13, weight=ft.FontWeight.BOLD, color="#0F172A"),
+                ft.Text("30-day analysis & insights", size=11, color="#64748B"),
+            ], expand=True, spacing=2),
+            ft.Icon(ft.Icons.ARROW_FORWARD_IOS_ROUNDED, size=14, color="#94A3B8")
+        ], spacing=10, vertical_alignment=ft.CrossAxisAlignment.CENTER),
+        padding=14, border_radius=18,
+        bgcolor=ft.Colors.WHITE,
+        border=ft.Border.all(1, "#E2E8F0"),
+        shadow=ft.BoxShadow(spread_radius=0, blur_radius=6, color=ft.Colors.with_opacity(0.04, "#000000")),
+        margin=ft.Padding(18, 8, 18, 4),
+        ink=True, on_click=lambda _: navigate_to("trends")
+    )
+
     # Scrollable Assembly
     return ft.ListView(
         controls=[
@@ -285,6 +307,7 @@ def build_sanjeevani_home_screen(page: ft.Page, navigate_to) -> ft.Control:
             search_bar,
             consult_banner,
             categories_grid,
+            trends_card,
             doctors_header,
             create_preview_doctor_card("Dr. Rohan Mehta", "General Physician", "4.8", DOCTOR_MALE_1),
             create_preview_doctor_card("Dr. Ananya Sharma", "Cardiologist", "4.9", DOCTOR_FEMALE),

@@ -164,6 +164,8 @@ from app.screens.sanjeevani_user_profile_screen import build_sanjeevani_user_pro
 from app.screens.scan_screen import build_scan_screen
 from app.screens.risk_screen import build_risk_screen
 from app.screens.report_screen import build_report_screen
+from app.screens.trend_chart_screen import build_trend_chart_screen
+from app.scheduler import start_medicine_scheduler
 
 def main(page: ft.Page):
     page.title = "Sanjeevani Healthcare — Android Mobile App"
@@ -285,6 +287,9 @@ def main(page: ft.Page):
         elif target_route == "user_profile":
             animated_switcher.content = build_sanjeevani_user_profile_screen(page, navigate_to)
             nav_container.visible = True
+        elif target_route == "trends":
+            animated_switcher.content = build_trend_chart_screen(page, navigate_to)
+            nav_container.visible = True
         else:
             animated_switcher.content = build_sanjeevani_home_screen(page, navigate_to)
             nav_container.visible = True
@@ -295,6 +300,12 @@ def main(page: ft.Page):
     # Initial screen launch: Home Dashboard
     nav_container.content = build_ios_bottom_nav(0)
     navigate_to("home")
+
+    # Start background medicine reminder scheduler
+    try:
+        start_medicine_scheduler(state.medicines, page)
+    except Exception as e:
+        print(f"[Scheduler Warning] Could not start scheduler: {e}")
 
     page.add(
         ft.Column([

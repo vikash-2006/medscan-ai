@@ -84,30 +84,36 @@ def build_scan_screen(page: ft.Page, navigate_to) -> ft.Control:
 
         loading_ring.visible = True
         analyze_btn.disabled = True
-        status_label.value = "Extracting biomarkers & running AI clinical analysis..."
+        status_label.value = "⏳ Extracting biomarkers..."
         page.update()
 
         import threading
+        import time as _time
         
         def _run_analysis():
             try:
                 state.current_report_title = title_field.value
                 # Step 1: Scan & Parse
+                status_label.value = "🔬 Parsing medical report..."
+                page.update()
                 state.scan_medical_report(raw_text=txt)
-                # Step 2: Explain with AI
+                
+                # Step 2: AI Analysis
+                status_label.value = "🤖 AI clinical analysis in progress..."
+                page.update()
                 state.generate_ai_explanation(language="hinglish")
                 
                 loading_ring.visible = False
                 analyze_btn.disabled = False
-                status_label.value = "Analysis complete! Navigating to insights..."
+                status_label.value = "✅ Analysis complete! Navigating..."
                 page.update()
                 
-                # Navigate to Report / Insights Screen
+                _time.sleep(0.5)  # Brief pause for user to see success
                 navigate_to("reports")
             except Exception as ex:
                 loading_ring.visible = False
                 analyze_btn.disabled = False
-                status_label.value = f"Error: {str(ex)}"
+                status_label.value = f"❌ Error: {str(ex)}"
                 show_snackbar(page, f"Failed to analyze report: {str(ex)}", bgcolor="#DC2626")
                 page.update()
 
