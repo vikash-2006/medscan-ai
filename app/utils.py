@@ -98,3 +98,11 @@ def show_dialog_modal(page: ft.Page, title: str, content: ft.Control, actions: O
             page.update()
     except Exception as e:
         print(f"[UI Warning] show_dialog_modal failed gracefully: {e}")
+
+def trigger_haptic(page: ft.Page):
+    """Safely triggers haptic feedback if supported."""
+    try:
+        if hasattr(page, "haptic_feedback"):
+            page.haptic_feedback()
+    except Exception:
+        pass

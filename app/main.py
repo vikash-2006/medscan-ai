@@ -164,10 +164,9 @@ from app.screens.report_screen import build_report_screen
 
 def main(page: ft.Page):
     page.title = "Sanjeevani Healthcare — Android Mobile App"
+    # Theme mode & Animation support
     page.theme_mode = ft.ThemeMode.LIGHT
-    page.bgcolor = "#F8FAFC"
-    page.padding = 0
-
+    
     # Mobile frame sizing for desktop simulation
     try:
         if hasattr(page, "window") and page.window:
@@ -181,6 +180,17 @@ def main(page: ft.Page):
     current_tab_index = 0
     main_content_area = ft.Container(expand=True, bgcolor="#F8FAFC")
     nav_container = ft.Container()
+
+    # Animated switcher for smooth transitions
+    animated_switcher = ft.AnimatedSwitcher(
+        content=ft.Container(),
+        transition=ft.AnimatedSwitcherTransition.FADE,
+        duration=300,
+        reverse_duration=100,
+        switch_in_curve=ft.AnimationCurve.EASE_IN_OUT,
+        switch_out_curve=ft.AnimationCurve.EASE_IN_OUT,
+    )
+    main_content_area.content = animated_switcher
 
     # iOS-Inspired Clean White Bottom Navigation Bar
     def build_ios_bottom_nav(active_tab: int):
@@ -240,40 +250,40 @@ def main(page: ft.Page):
 
         # Route resolution to view builders
         if target_route == "splash":
-            main_content_area.content = build_sanjeevani_splash_screen(page, navigate_to)
+            animated_switcher.content = build_sanjeevani_splash_screen(page, navigate_to)
             nav_container.visible = False
         elif target_route == "home":
-            main_content_area.content = build_sanjeevani_home_screen(page, navigate_to)
+            animated_switcher.content = build_sanjeevani_home_screen(page, navigate_to)
             nav_container.visible = True
         elif target_route == "doctors":
-            main_content_area.content = build_sanjeevani_doctors_screen(page, navigate_to)
+            animated_switcher.content = build_sanjeevani_doctors_screen(page, navigate_to)
             nav_container.visible = True
         elif target_route == "profile":
-            main_content_area.content = build_sanjeevani_profile_screen(page, navigate_to)
+            animated_switcher.content = build_sanjeevani_profile_screen(page, navigate_to)
             nav_container.visible = False
         elif target_route == "appointments":
-            main_content_area.content = build_sanjeevani_appointments_screen(page, navigate_to)
+            animated_switcher.content = build_sanjeevani_appointments_screen(page, navigate_to)
             nav_container.visible = True
         elif target_route == "video_call":
-            main_content_area.content = build_sanjeevani_video_screen(page, navigate_to)
+            animated_switcher.content = build_sanjeevani_video_screen(page, navigate_to)
             nav_container.visible = False
         elif target_route == "medicines":
-            main_content_area.content = build_sanjeevani_medicine_screen(page, navigate_to)
+            animated_switcher.content = build_sanjeevani_medicine_screen(page, navigate_to)
             nav_container.visible = True
         elif target_route == "scan_lab":
-            main_content_area.content = build_scan_screen(page, navigate_to)
+            animated_switcher.content = build_scan_screen(page, navigate_to)
             nav_container.visible = True
         elif target_route == "reports":
-            main_content_area.content = build_report_screen(page, navigate_to)
+            animated_switcher.content = build_report_screen(page, navigate_to)
             nav_container.visible = True
         elif target_route == "risk_ml":
-            main_content_area.content = build_risk_screen(page, navigate_to)
+            animated_switcher.content = build_risk_screen(page, navigate_to)
             nav_container.visible = True
         elif target_route == "user_profile":
-            main_content_area.content = build_sanjeevani_user_profile_screen(page, navigate_to)
+            animated_switcher.content = build_sanjeevani_user_profile_screen(page, navigate_to)
             nav_container.visible = True
         else:
-            main_content_area.content = build_sanjeevani_home_screen(page, navigate_to)
+            animated_switcher.content = build_sanjeevani_home_screen(page, navigate_to)
             nav_container.visible = True
 
         nav_container.content = build_ios_bottom_nav(current_tab_index)
