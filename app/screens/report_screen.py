@@ -1,4 +1,5 @@
 import flet as ft
+from datetime import datetime
 from app.state import state
 
 def build_report_screen(page: ft.Page, navigate_to) -> ft.Control:
@@ -152,6 +153,20 @@ def build_report_screen(page: ft.Page, navigate_to) -> ft.Control:
         on_click=lambda _: navigate_to("risk_ml")
     )
 
+    from fpdf import FPDF
+    
+    def download_pdf(e):
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", 'B', 16)
+        pdf.cell(200, 10, txt=state.current_report_title, ln=True, align='C')
+        pdf.set_font("Arial", size=12)
+        pdf.multi_cell(0, 10, txt=explanation.get("summary", ""), align='L')
+        # Simplified PDF generation for demo purposes
+        filename = f"report_{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf"
+        pdf.output(filename)
+        show_snackbar(page, f"Report downloaded as {filename}", bgcolor="#16A34A")
+
     consult_btn = ft.FilledButton(
         content=ft.Row([
             ft.Icon(ft.Icons.LOCAL_HOSPITAL_ROUNDED),
@@ -164,6 +179,15 @@ def build_report_screen(page: ft.Page, navigate_to) -> ft.Control:
         ),
         height=48,
         on_click=lambda _: navigate_to("doctors")
+    )
+    
+    pdf_btn = ft.OutlinedButton(
+        content=ft.Row([
+            ft.Icon(ft.Icons.PICTURE_AS_PDF_ROUNDED),
+            ft.Text("Download PDF Report", weight=ft.FontWeight.BOLD),
+        ], alignment=ft.MainAxisAlignment.CENTER, spacing=8),
+        height=48,
+        on_click=download_pdf
     )
 
     return ft.ListView(
@@ -184,6 +208,8 @@ def build_report_screen(page: ft.Page, navigate_to) -> ft.Control:
             transfer_btn,
             ft.Container(height=6),
             consult_btn,
+            ft.Container(height=6),
+            pdf_btn,
             ft.Container(height=25)
         ],
         spacing=8,
