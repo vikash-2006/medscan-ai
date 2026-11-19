@@ -1,9 +1,17 @@
+import os
 import flet as ft
 from app.state import state
 
-# Path to generated high-res image assets
-ROBOT_IMG = "/Users/apple/MedScan AI/app/assets/robot_avatar.jpg"
-DOCTOR_IMG = "/Users/apple/MedScan AI/app/assets/doctor_portrait.jpg"
+# Dynamic asset path resolution
+_BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_ASSETS_DIR = os.path.join(_BASE_DIR, "assets")
+
+def _get_asset(filename: str) -> str:
+    path = os.path.join(_ASSETS_DIR, filename)
+    return path if os.path.exists(path) else f"/{filename}"
+
+ROBOT_IMG = _get_asset("robot_avatar.jpg")
+DOCTOR_IMG = _get_asset("doctor_portrait.jpg")
 
 def build_aura_home_screen(page: ft.Page, navigate_to) -> ft.Control:
     # -------------------------------------------------------------

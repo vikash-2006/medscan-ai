@@ -1,6 +1,7 @@
 import flet as ft
 from datetime import datetime
 from app.state import state
+from app.utils import show_snackbar
 
 def build_report_screen(page: ft.Page, navigate_to) -> ft.Control:
     scan_data = state.current_scan_data

@@ -3,7 +3,7 @@ import json
 import os
 from datetime import datetime
 from typing import List, Dict, Any, Optional
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -13,16 +13,33 @@ DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "medscan.db")
 def get_key():
     key = os.getenv("ENCRYPTION_KEY")
     if not key:
-        raise ValueError("ENCRYPTION_KEY not found in environment variables.")
+        # Auto-generate and warn — never crash at import
+        key = Fernet.generate_key().decode()
+        print(f"[Security Warning] ENCRYPTION_KEY not found in .env. Auto-generated a temporary key. Set ENCRYPTION_KEY in .env for production!")
     return key.encode()
 
-fernet = Fernet(get_key())
+try:
+    fernet = Fernet(get_key())
+    _encryption_available = True
+except Exception as e:
+    print(f"[Security Warning] Encryption setup failed: {e}. Data will NOT be encrypted.")
+    fernet = None
+    _encryption_available = False
 
 def encrypt(data: str) -> str:
-    return fernet.encrypt(data.encode()).decode()
+    if fernet and _encryption_available:
+        return fernet.encrypt(data.encode()).decode()
+    return data
 
-def decrypt(data: str) -> str:
-    return fernet.decrypt(data.encode()).decode()
+def safe_decrypt(data: str) -> str:
+    """Decrypt data safely. If data is not encrypted (legacy) or decryption fails, return as-is."""
+    if not fernet or not _encryption_available:
+        return data
+    try:
+        return fernet.decrypt(data.encode()).decode()
+    except (InvalidToken, Exception):
+        # Legacy unencrypted data — return as-is
+        return data
 
 
 def init_db():
@@ -251,7 +268,7 @@ def get_appointments(limit: int = 50) -> List[Dict[str, Any]]:
     for r in rows:
         appointments.append({
             "id": r["id"],
-            "patient_name": decrypt(r["patient_name"]),
+            "patient_name": safe_decrypt(r["patient_name"]),
             "doctor_name": r["doctor_name"],
             "specialty": r["specialty"],
             "date_str": r["date_str"],

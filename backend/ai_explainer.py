@@ -78,7 +78,7 @@ class AIExplainer:
         return self._local_clinical_explanation(biomarkers, language)
 
     def _clean_json_response(self, text: str) -> Dict[str, Any]:
-        """Strips markdown code fences and parses valid JSON."""
+        """Strips markdown code fences and parses valid JSON. Falls back to local engine on failure."""
         cleaned = text.strip()
         if "```json" in cleaned:
             cleaned = cleaned.split("```json", 1)[1]
@@ -89,7 +89,30 @@ class AIExplainer:
             if "```" in cleaned:
                 cleaned = cleaned.split("```", 1)[0]
         cleaned = cleaned.strip()
-        return json.loads(cleaned)
+        
+        try:
+            return json.loads(cleaned)
+        except json.JSONDecodeError:
+            pass
+        
+        # Fallback: try to find any JSON object in the text using regex
+        try:
+            match = re.search(r'\{[\s\S]*\}', text)
+            if match:
+                return json.loads(match.group(0))
+        except (json.JSONDecodeError, Exception):
+            pass
+        
+        # Final fallback: return a safe structured response from raw text
+        print(f"[AI Warning] Could not parse LLM JSON response. Using raw text as summary.")
+        return {
+            "summary": text[:500] if text else "AI analysis could not be parsed.",
+            "key_findings": ["AI response format was unexpected. Please re-analyze."],
+            "diet_recommendations": ["Balanced diet maintain karein."],
+            "lifestyle_tips": ["Regular exercise aur proper sleep schedule rakhein."],
+            "urgency_level": "Moderate Caution",
+            "doctor_advisory": "Apne physician ko ye report dikhayein."
+        }
 
     def _call_groq_llm(self, biomarkers: List[Dict[str, Any]], language: str) -> Dict[str, Any]:
         prompt = f"""You are MedScan AI, an empathetic and professional medical clinical assistant.

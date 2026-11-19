@@ -14,3 +14,5 @@ dist/
 .env
 *.env
 .encryption.key
+test_medscan.db
+*.db
