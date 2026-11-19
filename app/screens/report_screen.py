@@ -155,17 +155,23 @@ def build_report_screen(page: ft.Page, navigate_to) -> ft.Control:
 
     from fpdf import FPDF
     
+    import threading
+    
     def download_pdf(e):
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("Arial", 'B', 16)
-        pdf.cell(200, 10, txt=state.current_report_title, ln=True, align='C')
-        pdf.set_font("Arial", size=12)
-        pdf.multi_cell(0, 10, txt=explanation.get("summary", ""), align='L')
-        # Simplified PDF generation for demo purposes
-        filename = f"report_{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf"
-        pdf.output(filename)
-        show_snackbar(page, f"Report downloaded as {filename}", bgcolor="#16A34A")
+        def _generate():
+            pdf = FPDF()
+            pdf.add_page()
+            pdf.set_font("Arial", 'B', 16)
+            pdf.cell(200, 10, txt=state.current_report_title, ln=True, align='C')
+            pdf.set_font("Arial", size=12)
+            pdf.multi_cell(0, 10, txt=explanation.get("summary", ""), align='L')
+            # Simplified PDF generation for demo purposes
+            filename = f"report_{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf"
+            pdf.output(filename)
+            show_snackbar(page, f"Report downloaded as {filename}", bgcolor="#16A34A")
+            page.update()
+        
+        threading.Thread(target=_generate, daemon=True).start()
 
     consult_btn = ft.FilledButton(
         content=ft.Row([

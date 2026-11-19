@@ -77,7 +77,7 @@ def build_sanjeevani_user_profile_screen(page: ft.Page, navigate_to) -> ft.Contr
             ft.Container(
                 content=ft.Row([
                     ft.Icon(ft.Icons.VERIFIED_ROUNDED, size=14, color="#2563EB"),
-                    ft.Text("ABHA ID: 91-4421-8890-2134", size=11, weight=ft.FontWeight.BOLD, color="#2563EB")
+                    ft.Text(f"ABHA ID: {os.getenv('ABHA_ID', 'N/A')}", size=11, weight=ft.FontWeight.BOLD, color="#2563EB")
                 ], spacing=4),
                 padding=ft.Padding.symmetric(horizontal=12, vertical=4),
                 border_radius=10,

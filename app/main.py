@@ -15,6 +15,9 @@ if "app" not in sys.modules:
     app_mod.__file__ = os.path.join(current_dir, "__init__.py")
     sys.modules["app"] = app_mod
 
+from dotenv import load_dotenv
+load_dotenv()
+
 import flet as ft
 
 # ---------------------------------------------------------------------------
