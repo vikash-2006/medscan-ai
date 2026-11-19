@@ -82,7 +82,14 @@ def show_dialog_modal(page: ft.Page, title: str, content: ft.Control, actions: O
 
     try:
         if hasattr(page, "show_dialog") and callable(page.show_dialog):
-            page.show_dialog(dlg)
+            try:
+                page.show_dialog(dlg)
+            except RuntimeError as e:
+                if "Dialog is already opened" in str(e):
+                    page.pop_dialog()
+                    page.show_dialog(dlg)
+                else:
+                    raise e
         elif hasattr(page, "open") and callable(page.open):
             page.open(dlg)
         elif hasattr(page, "overlay"):

@@ -29,7 +29,7 @@ def build_sanjeevani_user_profile_screen(page: ft.Page, navigate_to) -> ft.Contr
         name_input = ft.TextField(label="Full Name", value=state.patient_name, dense=True)
 
         def save_name(ev):
-            val = name_input.value.strip()
+            val = (name_input.value or "").strip()
             if val:
                 state.patient_name = val
                 if hasattr(page, "pop_dialog"):
@@ -149,10 +149,16 @@ def build_sanjeevani_user_profile_screen(page: ft.Page, navigate_to) -> ft.Contr
             border=ft.Border.all(1, "#E2E8F0")
         )
 
+    def get_safe_int(val, default):
+        try:
+            return int(float(val))
+        except:
+            return default
+
     vitals_row = ft.Container(
         content=ft.Row([
             create_vital_pill("Blood Group", "O+ Positive"),
-            create_vital_pill("Avg Fasting", f"{int(state.current_vitals.get('blood_sugar', 120))} mg/dL"),
+            create_vital_pill("Avg Fasting", f"{get_safe_int(state.current_vitals.get('blood_sugar', 120), 120)} mg/dL"),
             create_vital_pill("BMI Index", f"{state.current_vitals.get('bmi', 25.5)} kg/m²"),
         ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
         padding=ft.Padding.symmetric(horizontal=18, vertical=6)

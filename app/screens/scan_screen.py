@@ -77,7 +77,7 @@ def build_scan_screen(page: ft.Page, navigate_to) -> ft.Control:
         page.update()
 
     def handle_analyze(e):
-        txt = report_text_field.value.strip()
+        txt = (report_text_field.value or "").strip()
         if not txt:
             show_snackbar(page, "Please enter or paste report text to analyze!", bgcolor="#DC2626")
             return

@@ -132,7 +132,7 @@ def build_sanjeevani_doctors_screen(page: ft.Page, navigate_to) -> ft.Control:
 
     def on_search_change(e):
         nonlocal search_query
-        search_query = e.control.value.lower().strip()
+        search_query = (e.control.value or "").lower().strip()
         render_doctors_list()
         page.update()
 

@@ -29,7 +29,7 @@ def build_sanjeevani_medicine_screen(page: ft.Page, navigate_to) -> ft.Control:
         )
 
         def save_medicine(ev):
-            val = name_input.value.strip()
+            val = (name_input.value or "").strip()
             if not val:
                 show_snackbar(page, "Please enter a medicine name!", bgcolor="#DC2626")
                 return
