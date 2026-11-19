@@ -1,6 +1,7 @@
 import flet as ft
 from app.state import state
 from app.utils import show_snackbar, show_dialog_modal
+from plyer import notification
 
 def build_sanjeevani_medicine_screen(page: ft.Page, navigate_to) -> ft.Control:
     status_bar = ft.Container(
@@ -111,6 +112,18 @@ def build_sanjeevani_medicine_screen(page: ft.Page, navigate_to) -> ft.Control:
         med_name = state.medicines[idx]["name"]
         msg = f"Marked {med_name} as taken!" if is_checked else f"Marked {med_name} as pending."
         show_snackbar(page, msg, bgcolor="#16A34A" if is_checked else "#334155")
+        
+        # Trigger notification if marked as pending
+        if not is_checked:
+            try:
+                notification.notify(
+                    title='Medicine Reminder',
+                    message=f'Time to take your medicine: {med_name}',
+                    app_name='MedScan AI',
+                    timeout=10
+                )
+            except Exception as e:
+                print(f"Notification error: {e}")
         page.update()
 
     def render_medicine_list():
