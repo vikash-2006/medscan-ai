@@ -4,18 +4,17 @@ import os
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 from cryptography.fernet import Fernet
+from dotenv import load_dotenv
+
+load_dotenv()
 
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "medscan.db")
-KEY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".encryption.key")
 
 def get_key():
-    if os.path.exists(KEY_PATH):
-        with open(KEY_PATH, "rb") as f:
-            return f.read()
-    key = Fernet.generate_key()
-    with open(KEY_PATH, "wb") as f:
-        f.write(key)
-    return key
+    key = os.getenv("ENCRYPTION_KEY")
+    if not key:
+        raise ValueError("ENCRYPTION_KEY not found in environment variables.")
+    return key.encode()
 
 fernet = Fernet(get_key())
 
