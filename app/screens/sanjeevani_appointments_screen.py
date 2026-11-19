@@ -1,7 +1,7 @@
 import os
 import flet as ft
 from app.state import state
-from app.utils import show_snackbar, show_dialog_modal
+from app.utils import show_snackbar, show_dialog_modal, trigger_haptic
 
 _BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _ASSETS_DIR = os.path.join(_BASE_DIR, "assets")
@@ -114,7 +114,7 @@ def build_sanjeevani_appointments_screen(page: ft.Page, navigate_to) -> ft.Contr
                     ),
                     expand=True,
                     height=42,
-                    on_click=lambda _: navigate_to("video_call")
+                    on_click=lambda e: (navigate_to("video_call"), trigger_haptic(page))
                 ),
                 ft.OutlinedButton(
                     content=ft.Text("Reschedule", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
@@ -123,7 +123,7 @@ def build_sanjeevani_appointments_screen(page: ft.Page, navigate_to) -> ft.Contr
                         shape=ft.RoundedRectangleBorder(radius=12)
                     ),
                     height=42,
-                    on_click=lambda _: navigate_to("doctors")
+                    on_click=lambda e: (navigate_to("doctors"), trigger_haptic(page))
                 )
             ], spacing=8)
         ], spacing=4),
