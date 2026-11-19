@@ -3,8 +3,28 @@ import json
 import os
 from datetime import datetime
 from typing import List, Dict, Any, Optional
+from cryptography.fernet import Fernet
 
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "medscan.db")
+KEY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".encryption.key")
+
+def get_key():
+    if os.path.exists(KEY_PATH):
+        with open(KEY_PATH, "rb") as f:
+            return f.read()
+    key = Fernet.generate_key()
+    with open(KEY_PATH, "wb") as f:
+        f.write(key)
+    return key
+
+fernet = Fernet(get_key())
+
+def encrypt(data: str) -> str:
+    return fernet.encrypt(data.encode()).decode()
+
+def decrypt(data: str) -> str:
+    return fernet.decrypt(data.encode()).decode()
+
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
@@ -207,7 +227,7 @@ def save_appointment(patient_name: str, doctor_name: str, specialty: str, date_s
     cursor.execute("""
         INSERT INTO appointments (patient_name, doctor_name, specialty, date_str, time_str, fee, avatar, status)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """, (patient_name, doctor_name, specialty, date_str, time_str, fee, avatar, status))
+    """, (encrypt(patient_name), doctor_name, specialty, date_str, time_str, fee, avatar, status))
     appt_id = cursor.lastrowid
     conn.commit()
     conn.close()
@@ -232,7 +252,7 @@ def get_appointments(limit: int = 50) -> List[Dict[str, Any]]:
     for r in rows:
         appointments.append({
             "id": r["id"],
-            "patient_name": r["patient_name"],
+            "patient_name": decrypt(r["patient_name"]),
             "doctor_name": r["doctor_name"],
             "specialty": r["specialty"],
             "date_str": r["date_str"],
