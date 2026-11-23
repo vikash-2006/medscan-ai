@@ -46,10 +46,13 @@ class OCREngine:
                 print(f"[OCR Warning] pytesseract extraction skipped/failed: {e}")
 
         # Fallback: Check if file has metadata or is a mock sample text
-        txt_path = os.path.splitext(image_path)[0] + ".txt"
-        if os.path.exists(txt_path):
-            with open(txt_path, "r", encoding="utf-8") as f:
-                return f.read()
+        try:
+            txt_path = os.path.splitext(image_path)[0] + ".txt"
+            if os.path.exists(txt_path):
+                with open(txt_path, "r", encoding="utf-8", errors="ignore") as f:
+                    return f.read()
+        except Exception as e:
+            print(f"[OCR Warning] text fallback read error: {e}")
 
         return ""
 

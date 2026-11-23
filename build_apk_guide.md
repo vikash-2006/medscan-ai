@@ -75,10 +75,10 @@ jobs:
 ### Build Command:
 ```bash
 # 1. Project directory me jayein
-cd "/Users/apple/MedScan AI"
+cd MedScan\ AI
 
-# 2. Flet build apk command run karein
-flet build apk --project "MedScan AI" --org "com.vikash.medscan"
+# 2. Flet build apk command run karein (app directory specifies the application path)
+flet build apk app --project "MedScan AI" --org "com.vikash.medscan" --icon app/assets/app_icon.png
 ```
 Command complete hone par APK aapko `build/apk/` directory me mil jayegi:
 ```

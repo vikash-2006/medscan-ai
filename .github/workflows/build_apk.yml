@@ -43,7 +43,7 @@ jobs:
 
       - name: Build Ultra-Compressed Split Android APKs
         run: |
-          flet build apk \
+          flet build apk app \
             --project medscan_ai \
             --org com.vikash.medscan \
             --product "MedScan AI" \
@@ -54,8 +54,7 @@ jobs:
             --cleanup-packages \
             --split-per-abi \
             --yes \
-            -v \
-            app/
+            -v
 
       - name: Organize and Rename Optimized APKs
         run: |
@@ -90,28 +89,35 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
         with:
-          tag_name: v1.0.2
-          name: "MedScan AI Ultra-Compressed v1.0.2 (Fast & Lightweight)"
+          tag_name: v1.1.0
+          name: "MedScan AI v1.1.0 (Production Hardened & Optimized)"
           body: |
-            ### 🚀 MedScan AI Android Release v1.0.2 (Ultra-Compressed & Fast)
+            ### 🏥 MedScan AI Android Release v1.1.0 (Production Ready)
             
-            Humne app ko completely compress aur optimize kar diya hai:
-            - **Massive Size Reduction:** ~140 MB se ghat kar sirf **~35 MB** (75% size reduction)!
-            - **Asset Compression:** 96% smaller images (1.5 MB ➔ 58 KB) for instantaneous rendering.
-            - **Faster Performance:** Pre-compiled Python bytecode (.pyc) + instant on-device clinical fallbacks.
+            Key upgrades in this release:
+            - **Modern App Icon & Logo:** Premium AI healthcare cross emblem with glassmorphism aesthetic.
+            - **Crash-Free Hardened Architecture:** Safe decryption fallback, robust JSON parser, and null-safe inputs.
+            - **Full Mobile Dependency Bundling:** cryptography, schedule, plyer, fpdf, and supabase all bundled for Android.
+            - **Blood Sugar Trend Visualizer:** 30-day interactive LineChart with statistical summaries.
+            - **Background Medicine Scheduler:** Automated daily reminders for morning, afternoon, and night slots.
+            - **Cloud Backup Ready:** Supabase cloud database synchronization for appointments, scans, and medicines.
+            - **Unicode-Safe Clinical PDF Reports:** Clean, structured medical reports with biomarker breakdown.
             
             ---
             
             ### 📱 Download Links (Select your device):
             
-            1. **`MedScan-AI-arm64-v8a-Optimized.apk`** (**Recommended for 99% of Android Phones**):  
-               👉 *Samsung, Xiaomi, OnePlus, Realme, Vivo, Oppo, Pixel, Motorola* sabhi modern phones ke liye ye download karein.
+            1. **`MedScan-AI-arm64-v8a-Optimized.apk`** (**Recommended for 99% of Android phones**):  
+               👉 *Samsung, Xiaomi, OnePlus, Realme, Vivo, Oppo, Pixel, Motorola, Nothing*
                
             2. **`MedScan-AI-armeabi-v7a-Legacy.apk`**:  
-               👉 Older 32-bit Android phones ke liye.
+               👉 Older 32-bit Android smartphones.
                
             3. **`MedScan-AI-x86_64-Emulator.apk`**:  
-               👉 PC Android emulators (BlueStacks / LDPlayer) ke liye.
+               👉 PC Android emulators (BlueStacks, Nox, LDPlayer).
+            
+            4. **`MedScan-AI-Universal.apk`**:  
+               👉 Universal multi-architecture fallback APK.
                
             *(Direct 1-click download, no GitHub login required!)*
           files: |

@@ -22,32 +22,26 @@ def build_sanjeevani_splash_screen(page: ft.Page, navigate_to) -> ft.Control:
         padding=ft.Padding.symmetric(horizontal=24, vertical=8)
     )
 
-    # 2. Glowing Medical Cross Icon with Heartbeat Wave
+    # 2. Modern AI Medical App Emblem Logo
+    app_logo_path = _get_asset("app_logo.png")
     medical_logo = ft.Container(
-        content=ft.Stack([
-            # Outer soft aura glow
-            ft.Container(
-                width=110,
-                height=110,
-                border_radius=55,
-                bgcolor="#EAF4FF",
-                alignment=ft.Alignment.CENTER,
+        content=ft.Container(
+            content=ft.Image(
+                src=app_logo_path,
+                width=100,
+                height=100,
+                border_radius=26,
+                fit=ft.BoxFit.COVER,
             ),
-            # Inner Royal Blue Icon Badge
-            ft.Container(
-                content=ft.Icon(ft.Icons.LOCAL_HOSPITAL_ROUNDED, size=52, color=ft.Colors.WHITE),
-                width=86,
-                height=86,
-                border_radius=43,
-                bgcolor="#2563EB",
-                alignment=ft.Alignment.CENTER,
-                shadow=ft.BoxShadow(
-                    spread_radius=2,
-                    blur_radius=24,
-                    color=ft.Colors.with_opacity(0.35, "#2563EB")
-                )
-            ),
-        ], alignment=ft.Alignment.CENTER),
+            width=100,
+            height=100,
+            border_radius=26,
+            shadow=ft.BoxShadow(
+                spread_radius=2,
+                blur_radius=24,
+                color=ft.Colors.with_opacity(0.35, "#2563EB")
+            )
+        ),
         alignment=ft.Alignment.CENTER,
         padding=ft.Padding.only(top=40, bottom=16)
     )

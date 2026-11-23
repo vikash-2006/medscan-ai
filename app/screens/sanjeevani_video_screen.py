@@ -24,8 +24,6 @@ def build_sanjeevani_video_screen(page: ft.Page, navigate_to) -> ft.Control:
 
     mic_icon = ft.Icon(ft.Icons.MIC_ROUNDED, color=ft.Colors.WHITE, size=24)
     camera_icon = ft.Icon(ft.Icons.VIDEOCAM_ROUNDED, color=ft.Colors.WHITE, size=24)
-    mic_btn_container = ft.Container()
-    cam_btn_container = ft.Container()
 
     def toggle_mic(e):
         nonlocal mic_muted
@@ -118,7 +116,7 @@ def build_sanjeevani_video_screen(page: ft.Page, navigate_to) -> ft.Control:
         height=130,
         border_radius=16,
         border=ft.Border.all(2, ft.Colors.WHITE),
-        shadow=ft.BoxShadow(spread_radius=1, blur_radius=12, color=ft.Colors.BLACK45),
+        shadow=ft.BoxShadow(spread_radius=1, blur_radius=12, color=ft.Colors.BLACK_45),
         right=24,
         top=80
     )

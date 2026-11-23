@@ -47,7 +47,7 @@ def build_sanjeevani_home_screen(page: ft.Page, navigate_to) -> ft.Control:
                     border=ft.Border.all(2, "#2563EB")
                 ),
                 ft.Column([
-                    ft.Text(f"Hi, {state.patient_name.split()[0]} 👋", size=17, weight=ft.FontWeight.BOLD, color="#0F172A"),
+                    ft.Text(f"Hi, {((state.patient_name or '').strip().split() or ['User'])[0]} 👋", size=17, weight=ft.FontWeight.BOLD, color="#0F172A"),
                     ft.Text("How are you feeling today?", size=11, color="#64748B"),
                 ], spacing=1)
             ], spacing=10),

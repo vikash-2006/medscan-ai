@@ -152,7 +152,7 @@ def build_sanjeevani_user_profile_screen(page: ft.Page, navigate_to) -> ft.Contr
     def get_safe_int(val, default):
         try:
             return int(float(val))
-        except:
+        except (ValueError, TypeError):
             return default
 
     vitals_row = ft.Container(
@@ -191,10 +191,25 @@ def build_sanjeevani_user_profile_screen(page: ft.Page, navigate_to) -> ft.Contr
             on_click=on_click
         )
 
+    def handle_cloud_sync(e):
+        try:
+            from backend.cloud_backup import full_backup, is_cloud_available
+            if not is_cloud_available():
+                show_snackbar(page, "Cloud Sync: Add SUPABASE_URL & SUPABASE_KEY to .env to activate.", bgcolor="#D97706")
+                return
+            res = full_backup(state)
+            if res.get("success"):
+                show_snackbar(page, f"Cloud Backup Complete! {res.get('total_uploaded', 0)} records synced.", bgcolor="#16A34A")
+            else:
+                show_snackbar(page, f"Backup error: {res.get('error')}", bgcolor="#DC2626")
+        except Exception as ex:
+            show_snackbar(page, f"Cloud error: {str(ex)}", bgcolor="#DC2626")
+
     menu_section = ft.Column([
         create_menu_tile(ft.Icons.RECEIPT_LONG_ROUNDED, "Lab Test Reports", "Clinical biomarker analysis history", lambda _: navigate_to("reports")),
         create_menu_tile(ft.Icons.FAVORITE_ROUNDED, "Sanjeevani Risk ML Engine", "Cardiometabolic risk assessments", lambda _: navigate_to("risk_ml")),
         create_menu_tile(ft.Icons.MEDICATION_ROUNDED, "Medicine Schedule", "Active daily dosage reminders", lambda _: navigate_to("medicines")),
+        create_menu_tile(ft.Icons.CLOUD_SYNC_ROUNDED, "Cloud Backup & Sync", "Sync appointments, scans & meds to Cloud", handle_cloud_sync),
         create_menu_tile(ft.Icons.SECURITY_ROUNDED, "Privacy & ABHA Sync", "Digital health locker linked", lambda _: show_snackbar(page, "ABHA health records encrypted and synced.", bgcolor="#16A34A")),
     ], spacing=4)
 

@@ -16,6 +16,7 @@ flet build apk \
   --org com.vikash.medscan \
   --product "MedScan AI" \
   --description "AI Medical Diagnostic & Health Assistant by Vikash Kumawat" \
+  --icon app/assets/app_icon.png \
   --yes \
   -v \
   app/

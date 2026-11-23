@@ -68,8 +68,8 @@ def build_sanjeevani_appointments_screen(page: ft.Page, navigate_to) -> ft.Contr
                 ft.Row([
                     ft.Image(src=doc_avatar, width=48, height=48, fit=ft.BoxFit.COVER, border_radius=14),
                     ft.Column([
-                        ft.Text(active_appt["doctor_name"], size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
-                        ft.Text(active_appt["specialty"], size=11, color=ft.Colors.with_opacity(0.85, ft.Colors.WHITE)),
+                        ft.Text(active_appt.get("doctor_name", "Doctor"), size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+                        ft.Text(active_appt.get("specialty", "Specialist"), size=11, color=ft.Colors.with_opacity(0.85, ft.Colors.WHITE)),
                     ], spacing=1)
                 ], spacing=10),
                 ft.Container(
@@ -86,12 +86,12 @@ def build_sanjeevani_appointments_screen(page: ft.Page, navigate_to) -> ft.Contr
                 content=ft.Row([
                     ft.Row([
                         ft.Icon(ft.Icons.CALENDAR_TODAY_ROUNDED, size=14, color="#1D4ED8"),
-                        ft.Text(active_appt["date_str"], size=11, weight=ft.FontWeight.BOLD, color="#1D4ED8")
+                        ft.Text(active_appt.get("date_str", "Today"), size=11, weight=ft.FontWeight.BOLD, color="#1D4ED8")
                     ], spacing=4),
                     ft.Container(width=1, height=14, bgcolor="#CBD5E1"),
                     ft.Row([
                         ft.Icon(ft.Icons.ACCESS_TIME_ROUNDED, size=14, color="#1D4ED8"),
-                        ft.Text(active_appt["time_str"], size=11, weight=ft.FontWeight.BOLD, color="#1D4ED8")
+                        ft.Text(active_appt.get("time_str", "10:00 AM"), size=11, weight=ft.FontWeight.BOLD, color="#1D4ED8")
                     ], spacing=4)
                 ], alignment=ft.MainAxisAlignment.SPACE_AROUND),
                 padding=ft.Padding.symmetric(horizontal=12, vertical=8),
@@ -100,13 +100,13 @@ def build_sanjeevani_appointments_screen(page: ft.Page, navigate_to) -> ft.Contr
             ),
 
             ft.Container(height=10),
-            # Actions Row: Join Video Call & Reschedule
+            # Actions Row: Join Video Call, Reschedule & Cancel
             ft.Row([
                 ft.FilledButton(
                     content=ft.Row([
                         ft.Icon(ft.Icons.VIDEOCAM_ROUNDED, size=16),
-                        ft.Text("Join Video Call", size=12, weight=ft.FontWeight.BOLD)
-                    ], spacing=6),
+                        ft.Text("Join Video", size=11, weight=ft.FontWeight.BOLD)
+                    ], spacing=4),
                     style=ft.ButtonStyle(
                         bgcolor="#16A34A",
                         color=ft.Colors.WHITE,
@@ -117,15 +117,25 @@ def build_sanjeevani_appointments_screen(page: ft.Page, navigate_to) -> ft.Contr
                     on_click=lambda e: (navigate_to("video_call"), trigger_haptic(page))
                 ),
                 ft.OutlinedButton(
-                    content=ft.Text("Reschedule", size=12, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
+                    content=ft.Text("Reschedule", size=11, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE),
                     style=ft.ButtonStyle(
-                        side=ft.BorderSide(1, ft.Colors.WHITE70),
+                        side=ft.BorderSide(1, ft.Colors.WHITE_70),
                         shape=ft.RoundedRectangleBorder(radius=12)
                     ),
                     height=42,
                     on_click=lambda e: (navigate_to("doctors"), trigger_haptic(page))
+                ),
+                ft.OutlinedButton(
+                    content=ft.Icon(ft.Icons.CANCEL_OUTLINED, size=16, color=ft.Colors.WHITE),
+                    style=ft.ButtonStyle(
+                        side=ft.BorderSide(1, ft.Colors.WHITE_70),
+                        shape=ft.RoundedRectangleBorder(radius=12)
+                    ),
+                    height=42,
+                    tooltip="Cancel Appointment",
+                    on_click=cancel_active_appointment
                 )
-            ], spacing=8)
+            ], spacing=6)
         ], spacing=4),
         padding=16,
         border_radius=22,
@@ -140,11 +150,14 @@ def build_sanjeevani_appointments_screen(page: ft.Page, navigate_to) -> ft.Contr
 
     # 4. QR Code Digital Check-in
     def show_qr_modal(e):
+        doc_name = active_appt.get("doctor_name", "Doctor")
+        d_str = active_appt.get("date_str", "Today")
+        t_str = active_appt.get("time_str", "10:00 AM")
         qr_content = ft.Column([
             ft.Icon(ft.Icons.QR_CODE_2_ROUNDED, size=120, color="#2563EB"),
-            ft.Text(f"Token #SJH-4409\n{active_appt['doctor_name']}", size=13, weight=ft.FontWeight.BOLD,
+            ft.Text(f"Token #SJH-4409\n{doc_name}", size=13, weight=ft.FontWeight.BOLD,
                     text_align=ft.TextAlign.CENTER, color="#0F172A"),
-            ft.Text(f"{active_appt['date_str']} • {active_appt['time_str']}\nPresent at Sanjeevani Kiosk reception counter.",
+            ft.Text(f"{d_str} • {t_str}\nPresent at Sanjeevani Kiosk reception counter.",
                     size=11, color="#64748B", text_align=ft.TextAlign.CENTER)
         ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=6)
         show_dialog_modal(page, "Digital Check-In Pass", qr_content)

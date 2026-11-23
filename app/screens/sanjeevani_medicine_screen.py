@@ -1,7 +1,12 @@
 import flet as ft
 from app.state import state
 from app.utils import show_snackbar, show_dialog_modal
-from plyer import notification
+try:
+    from plyer import notification
+    _NOTIFICATION_AVAILABLE = True
+except Exception:
+    notification = None
+    _NOTIFICATION_AVAILABLE = False
 
 def build_sanjeevani_medicine_screen(page: ft.Page, navigate_to) -> ft.Control:
     status_bar = ft.Container(
@@ -114,7 +119,7 @@ def build_sanjeevani_medicine_screen(page: ft.Page, navigate_to) -> ft.Control:
         show_snackbar(page, msg, bgcolor="#16A34A" if is_checked else "#334155")
         
         # Trigger notification if marked as pending
-        if not is_checked:
+        if not is_checked and notification and _NOTIFICATION_AVAILABLE:
             try:
                 notification.notify(
                     title='Medicine Reminder',

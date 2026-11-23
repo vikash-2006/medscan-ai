@@ -119,16 +119,24 @@ async def scan_medical_report(file: UploadFile = File(None), raw_text: Optional[
     logger.info(f"Incoming report scan request via {source_type} (Filename: {file.filename if file else 'None'})")
 
     if file:
-        suffix = os.path.splitext(file.filename)[1] or ".png"
-        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-            shutil.copyfileobj(file.file, tmp)
-            tmp_path = tmp.name
-        
+        tmp_path = None
         try:
+            suffix = os.path.splitext(file.filename or "")[1] or ".png"
+            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+                shutil.copyfileobj(file.file, tmp)
+                tmp_path = tmp.name
             extracted_text = ocr.extract_text(tmp_path)
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Error processing uploaded file: {e}")
+            raise HTTPException(status_code=500, detail=f"File processing error: {str(e)}")
         finally:
-            if os.path.exists(tmp_path):
-                os.remove(tmp_path)
+            if tmp_path and os.path.exists(tmp_path):
+                try:
+                    os.remove(tmp_path)
+                except Exception:
+                    pass
     elif raw_text:
         extracted_text = raw_text
     else:

@@ -38,12 +38,11 @@ def _send_notification(medicine_name: str, timing: str):
 
 def _run_scheduler():
     """Background loop that runs pending scheduled jobs."""
-    global _scheduler_running
     while _scheduler_running:
         try:
             schedule.run_pending()
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[Scheduler Loop Warning] Job execution error: {e}")
         time.sleep(30)  # Check every 30 seconds
 
 

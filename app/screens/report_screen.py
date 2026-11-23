@@ -154,14 +154,36 @@ def build_report_screen(page: ft.Page, navigate_to) -> ft.Control:
         on_click=lambda _: navigate_to("risk_ml")
     )
 
-    from fpdf import FPDF
+    try:
+        from fpdf import FPDF
+        _FPDF_AVAILABLE = True
+    except Exception:
+        FPDF = None
+        _FPDF_AVAILABLE = False
     
     import threading
+
+    def _clean_pdf_text(text: str) -> str:
+        if not text:
+            return ""
+        replacements = {
+            "—": "-", "–": "-", "“": '"', "”": '"', "‘": "'", "’": "'",
+            "•": "*", "…": "...", "₹": "Rs. ", "✓": "[OK]", "⚠️": "[Caution]",
+            "✅": "[Normal]", "❌": "[Alert]", "🔬": "", "🤖": "", "📄": "",
+            "💊": "", "📊": "", "👋": "", "🩺": ""
+        }
+        for old, new in replacements.items():
+            text = text.replace(old, new)
+        return text.encode("latin-1", "replace").decode("latin-1")
 
     pdf_status = ft.Text("", size=11, color="#64748B")
     pdf_loading = ft.ProgressRing(width=16, height=16, stroke_width=2, visible=False)
     
     def download_pdf(e):
+        if not _FPDF_AVAILABLE or FPDF is None:
+            show_snackbar(page, "PDF export library not available.", bgcolor="#DC2626")
+            return
+
         pdf_loading.visible = True
         pdf_status.value = "📄 Generating PDF report..."
         page.update()
@@ -170,20 +192,82 @@ def build_report_screen(page: ft.Page, navigate_to) -> ft.Control:
             try:
                 pdf = FPDF()
                 pdf.add_page()
+                pdf.set_auto_page_break(auto=True, margin=15)
+                
+                # Header
                 pdf.set_font("Arial", 'B', 16)
-                pdf.cell(200, 10, txt=state.current_report_title, ln=True, align='C')
-                pdf.set_font("Arial", size=12)
-                pdf.multi_cell(0, 10, txt=explanation.get("summary", ""), align='L')
+                pdf.cell(0, 10, txt=_clean_pdf_text(state.current_report_title), ln=True, align='C')
+                
+                pdf.set_font("Arial", size=10)
+                date_str = datetime.now().strftime("%d %b %Y, %I:%M %p")
+                patient = getattr(state, "patient_name", "Patient")
+                pdf.cell(0, 6, txt=_clean_pdf_text(f"Patient: {patient}  |  Generated: {date_str}"), ln=True, align='C')
+                pdf.ln(4)
+                
+                # Urgency Status
+                pdf.set_font("Arial", 'B', 11)
+                pdf.cell(0, 8, txt=_clean_pdf_text(f"Triage Level: {urgency}"), ln=True)
+                pdf.ln(2)
+                
+                # Clinical Summary
+                pdf.set_font("Arial", 'B', 12)
+                pdf.cell(0, 8, txt="Clinical Interpretation Summary:", ln=True)
+                pdf.set_font("Arial", size=10)
+                pdf.multi_cell(0, 6, txt=_clean_pdf_text(explanation.get("summary", "No summary available.")))
+                pdf.ln(4)
+                
+                # Biomarkers Table
+                biomarkers = scan_data.get("biomarkers", [])
+                if biomarkers:
+                    pdf.set_font("Arial", 'B', 11)
+                    pdf.cell(0, 8, txt="Biomarkers Detected:", ln=True)
+                    pdf.set_font("Arial", 'B', 9)
+                    pdf.cell(60, 7, txt="Biomarker", border=1)
+                    pdf.cell(35, 7, txt="Value", border=1)
+                    pdf.cell(30, 7, txt="Status", border=1)
+                    pdf.cell(60, 7, txt="Reference Range", border=1, ln=True)
+                    
+                    pdf.set_font("Arial", size=9)
+                    for b in biomarkers:
+                        name = _clean_pdf_text(str(b.get("name", "")))[:28]
+                        val = _clean_pdf_text(f"{b.get('value', '')} {b.get('unit', '')}")
+                        st = _clean_pdf_text(str(b.get("status", "NORMAL")))
+                        ref = _clean_pdf_text(str(b.get("reference_range", "")))
+                        pdf.cell(60, 6, txt=name, border=1)
+                        pdf.cell(35, 6, txt=val, border=1)
+                        pdf.cell(30, 6, txt=st, border=1)
+                        pdf.cell(60, 6, txt=ref, border=1, ln=True)
+                    pdf.ln(4)
+
+                # Diet & Lifestyle Recommendations
+                diet_tips = explanation.get("diet_recommendations", [])
+                if diet_tips:
+                    pdf.set_font("Arial", 'B', 11)
+                    pdf.cell(0, 8, txt="Dietary Recommendations:", ln=True)
+                    pdf.set_font("Arial", size=10)
+                    for tip in diet_tips:
+                        pdf.multi_cell(0, 5, txt=_clean_pdf_text(f"- {tip}"))
+                    pdf.ln(3)
+
+                # Doctor Advisory
+                advisory = explanation.get("doctor_advisory", "")
+                if advisory:
+                    pdf.set_font("Arial", 'B', 11)
+                    pdf.cell(0, 8, txt="Medical Advisory:", ln=True)
+                    pdf.set_font("Arial", 'I', 10)
+                    pdf.multi_cell(0, 5, txt=_clean_pdf_text(advisory))
+                    pdf.ln(4)
+
                 filename = f"report_{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf"
                 pdf.output(filename)
                 pdf_loading.visible = False
-                pdf_status.value = f"✅ Saved as {filename}"
-                show_snackbar(page, f"Report downloaded as {filename}", bgcolor="#16A34A")
+                pdf_status.value = f"Saved: {filename}"
+                show_snackbar(page, f"PDF report saved: {filename}", bgcolor="#16A34A")
                 page.update()
             except Exception as ex:
                 pdf_loading.visible = False
-                pdf_status.value = f"❌ Failed: {str(ex)}"
-                show_snackbar(page, f"PDF error: {str(ex)}", bgcolor="#DC2626")
+                pdf_status.value = f"Export error: {str(ex)}"
+                show_snackbar(page, f"PDF export failed: {str(ex)}", bgcolor="#DC2626")
                 page.update()
         
         threading.Thread(target=_generate, daemon=True).start()
