@@ -1,12 +1,20 @@
+import os
+import sys
 import flet as ft
 from app.state import state
 from app.utils import show_snackbar, show_dialog_modal
-try:
-    from plyer import notification
-    _NOTIFICATION_AVAILABLE = True
-except Exception:
-    notification = None
-    _NOTIFICATION_AVAILABLE = False
+
+_IS_ANDROID = sys.platform == "android" or "ANDROID_ARGUMENT" in os.environ or "ANDROID_ROOT" in os.environ
+notification = None
+_NOTIFICATION_AVAILABLE = False
+
+if not _IS_ANDROID:
+    try:
+        from plyer import notification
+        _NOTIFICATION_AVAILABLE = True
+    except Exception:
+        notification = None
+        _NOTIFICATION_AVAILABLE = False
 
 def build_sanjeevani_medicine_screen(page: ft.Page, navigate_to) -> ft.Control:
     status_bar = ft.Container(

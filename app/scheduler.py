@@ -2,9 +2,13 @@
 Background Medicine Reminder Scheduler for MedScan AI.
 Uses schedule + threading to send notifications even when user is on another screen.
 """
+import os
+import sys
 import threading
 import time
 from typing import List, Dict, Any
+
+_IS_ANDROID = sys.platform == "android" or "ANDROID_ARGUMENT" in os.environ or "ANDROID_ROOT" in os.environ
 
 try:
     import schedule
@@ -24,7 +28,10 @@ SLOT_TIMES = {
 
 
 def _send_notification(medicine_name: str, timing: str):
-    """Send a local notification using plyer."""
+    """Send a local notification using plyer (desktop platforms only)."""
+    if _IS_ANDROID:
+        print(f"[Scheduler Reminder] {medicine_name} scheduled time: {timing}")
+        return
     try:
         from plyer import notification
         notification.notify(
