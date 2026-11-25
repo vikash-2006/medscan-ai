@@ -43,7 +43,7 @@ jobs:
 
       - name: Build Ultra-Compressed Split Android APKs
         run: |
-          flet build apk app \
+          flet build apk \
             --project medscan_ai \
             --org com.vikash.medscan \
             --product "MedScan AI" \
@@ -54,7 +54,8 @@ jobs:
             --cleanup-packages \
             --split-per-abi \
             --yes \
-            -v
+            -v \
+            app/
 
       - name: Organize and Rename Optimized APKs
         run: |
