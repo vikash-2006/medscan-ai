@@ -76,14 +76,11 @@ jobs:
           echo "=== Generated Optimized APKs ==="
           ls -lh release_apks/
 
-      - name: Upload APKs as Release Artifacts
+      - name: Upload Phone APK as Release Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MedScan-AI-Optimized-APKs
-          path: |
-            release_apks/*.apk
-            app/build/apk/*.apk
-            build/apk/*.apk
+          name: MedScan-AI-arm64-Phone-APK
+          path: release_apks/MedScan-AI-arm64-v8a-Optimized.apk
           retention-days: 14
 
       - name: Publish to GitHub Releases
@@ -98,7 +95,7 @@ jobs:
             Key upgrades in this release:
             - **Modern App Icon & Logo:** Premium AI healthcare cross emblem with glassmorphism aesthetic.
             - **Crash-Free Hardened Architecture:** Safe decryption fallback, robust JSON parser, and null-safe inputs.
-            - **Full Mobile Dependency Bundling:** cryptography, schedule, plyer, fpdf, and supabase all bundled for Android.
+            - **100% Android Native Compatibility:** Bypassed Kivy plyer JNI calls to eliminate ClassNotFoundException on all Android versions.
             - **Blood Sugar Trend Visualizer:** 30-day interactive LineChart with statistical summaries.
             - **Background Medicine Scheduler:** Automated daily reminders for morning, afternoon, and night slots.
             - **Cloud Backup Ready:** Supabase cloud database synchronization for appointments, scans, and medicines.
@@ -106,23 +103,9 @@ jobs:
             
             ---
             
-            ### 📱 Download Links (Select your device):
+            ### 📱 Direct Download Link (Single .apk File):
             
-            1. **`MedScan-AI-arm64-v8a-Optimized.apk`** (**Recommended for 99% of Android phones**):  
-               👉 *Samsung, Xiaomi, OnePlus, Realme, Vivo, Oppo, Pixel, Motorola, Nothing*
-               
-            2. **`MedScan-AI-armeabi-v7a-Legacy.apk`**:  
-               👉 Older 32-bit Android smartphones.
-               
-            3. **`MedScan-AI-x86_64-Emulator.apk`**:  
-               👉 PC Android emulators (BlueStacks, Nox, LDPlayer).
-            
-            4. **`MedScan-AI-Universal.apk`**:  
-               👉 Universal multi-architecture fallback APK.
-               
-            *(Direct 1-click download, no GitHub login required!)*
-          files: |
-            release_apks/*.apk
-            app/build/apk/*.apk
-            build/apk/*.apk
+            👉 **[MedScan-AI-arm64-v8a-Optimized.apk](https://github.com/vikash-2006/medscan-ai/releases/download/v1.1.0/MedScan-AI-arm64-v8a-Optimized.apk)**  
+            *(Recommended for 99% of Android phones: Samsung, OnePlus, Xiaomi, Realme, Vivo, Oppo, Pixel, Nothing)*
+          files: release_apks/*.apk
         continue-on-error: true
